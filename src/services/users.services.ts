@@ -8,6 +8,7 @@ import 'dotenv/config'
 import { SignOptions } from 'jsonwebtoken'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
 import { ObjectId } from 'mongodb'
+import { USERS_MESSAGES } from '@/constants/messages.js'
 class UsersService {
   private signAccessToken(user_id: string) {
     return signToken({
@@ -68,6 +69,10 @@ class UsersService {
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
     return { access_token, refresh_token }
+  }
+  async logout(refresh_token: string) {
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token })
+    return { message: USERS_MESSAGES.LOGOUT_SUCCESSFUL }
   }
 }
 

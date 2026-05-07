@@ -18,12 +18,19 @@ export const USERS_MESSAGES = {
   CONFIRM_PASSWORD_MISMATCH: 'Confirm password does not match password',
   DAY_OF_BIRTH_IS_REQUIRED: 'Day of birth is required',
   INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
-  USER_NOT_FOUND: 'User not found'
+  USER_NOT_FOUND: 'User not found',
+  LOGOUT_SUCCESSFUL: 'Logout successful'
 } as const
 
 export const AUTH_MESSAGES = {
   LOGIN_SUCCESS: 'Login successful',
   INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
   USER_REGISTERED_SUCCESSFULLY: 'User registered successfully',
-  JWT_TOKEN_GENERATION_FAILED: 'JWT token generation failed'
+  JWT_TOKEN_GENERATION_FAILED: 'JWT token generation failed',
+  REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required',
+  ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
+  REFRESH_TOKEN_IS_INVALID: 'Refresh token is invalid',
+  USED_REFRESH_TOKEN_OR_NOT_EXISTS:
+    'Used refresh token or refresh token does not exist',
+  ACCESS_TOKEN_IS_INVALID: 'Access token is invalid'
 } as const

@@ -3,6 +3,18 @@ import usersService from '@/services/users.services.js'
 import { AUTH_MESSAGES } from '@/constants/messages.js'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+
+export const registerController = async (
+  req: Request<ParamsDictionary, any, RegisterRequestBody>,
+  res: Response
+) => {
+  const result = await usersService.register(req.body)
+  return res.status(201).json({
+    message: AUTH_MESSAGES.USER_REGISTERED_SUCCESSFULLY,
+    data: result
+  })
+}
+
 export const loginController = async (req: Request, res: Response) => {
   const user = req.user
   if (!user || !user._id) {
@@ -22,13 +34,8 @@ export const loginController = async (req: Request, res: Response) => {
   })
 }
 
-export const registerController = async (
-  req: Request<ParamsDictionary, any, RegisterRequestBody>,
-  res: Response
-) => {
-  const result = await usersService.register(req.body)
-  return res.status(201).json({
-    message: AUTH_MESSAGES.USER_REGISTERED_SUCCESSFULLY,
-    data: result
-  })
+export const logoutController = async (req: Request, res: Response) => {
+  const { refresh_token } = req.body
+  const result = await usersService.logout(refresh_token)
+  return res.json(result)
 }

@@ -1,6 +1,8 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
 import 'dotenv/config'
 import { AUTH_MESSAGES } from '@/constants/messages.js'
+import { TokenPayload } from '@/@types/express.js'
+
 export const signToken = ({
   payload,
   secretKey = process.env.JWT_SECRET as string,
@@ -21,6 +23,23 @@ export const signToken = ({
         return reject(new Error(AUTH_MESSAGES.JWT_TOKEN_GENERATION_FAILED))
       }
       resolve(token)
+    })
+  })
+}
+
+export const verifyToken = ({
+  token,
+  secretKey = process.env.JWT_SECRET as string
+}: {
+  token: string
+  secretKey?: string
+}) => {
+  return new Promise<TokenPayload>((resolve, reject) => {
+    jwt.verify(token, secretKey, (err, decoded) => {
+      if (err) {
+        return reject(err)
+      }
+      resolve(decoded as TokenPayload)
     })
   })
 }
