@@ -1,9 +1,13 @@
-import { createHash } from 'crypto'
-import 'dotenv/config'
-function sha256(data: string) {
-  return createHash('sha256').update(data).digest('hex')
+import bcrypt from 'bcrypt'
+const SALT_ROUNDS = 10
+
+export const hashPassword = (password: string): Promise<string> => {
+  return bcrypt.hash(password, SALT_ROUNDS)
 }
 
-export function hashPassword(password: string) {
-  return sha256(password + process.env.PASSWORD_SECRET)
+export const comparePassword = (
+  password: string,
+  hashPassword: string
+): Promise<boolean> => {
+  return bcrypt.compare(password, hashPassword)
 }

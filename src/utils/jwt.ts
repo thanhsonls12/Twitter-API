@@ -1,11 +1,11 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
-import 'dotenv/config'
+import { envConfig } from '@/config/env.js'
 import { AUTH_MESSAGES } from '@/constants/messages.js'
 import { TokenPayload } from '@/@types/express.js'
 
 export const signToken = ({
   payload,
-  secretKey = process.env.JWT_SECRET as string,
+  secretKey = envConfig.JWT_SECRET,
   options = {
     algorithm: 'HS256'
   }
@@ -29,7 +29,7 @@ export const signToken = ({
 
 export const verifyToken = ({
   token,
-  secretKey = process.env.JWT_SECRET as string
+  secretKey = envConfig.JWT_SECRET
 }: {
   token: string
   secretKey?: string

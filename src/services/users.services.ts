@@ -4,11 +4,11 @@ import { RegisterRequestBody } from '@/models/requests/User.requests.js'
 import { hashPassword } from '@/utils/crypto.js'
 import { signToken } from '@/utils/jwt.js'
 import { TokenType } from '@/constants/enums.js'
-import 'dotenv/config'
+import { envConfig } from '@/config/env.js'
 import { SignOptions } from 'jsonwebtoken'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
 import { ObjectId } from 'mongodb'
-import { USERS_MESSAGES } from '@/constants/messages.js'
+import { AUTH_MESSAGES } from '@/constants/messages.js'
 class UsersService {
   private signAccessToken(user_id: string) {
     return signToken({
@@ -17,8 +17,7 @@ class UsersService {
         token_type: TokenType.AccessToken
       },
       options: {
-        expiresIn: process.env
-          .ACCESS_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
+        expiresIn: envConfig.ACCESS_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
       }
     })
   }
@@ -29,8 +28,8 @@ class UsersService {
         token_type: TokenType.RefreshToken
       },
       options: {
-        expiresIn: process.env
-          .REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
+        expiresIn:
+          envConfig.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
       }
     })
   }
@@ -47,7 +46,7 @@ class UsersService {
       new User({
         ...payload,
         date_of_birth: new Date(payload.day_of_birth),
-        password: hashPassword(payload.password)
+        password: await hashPassword(payload.password)
       })
     )
     const user_id = result.insertedId.toString()
@@ -70,9 +69,12 @@ class UsersService {
     )
     return { access_token, refresh_token }
   }
-  async logout(refresh_token: string) {
-    await databaseService.refreshTokens.deleteOne({ token: refresh_token })
-    return { message: USERS_MESSAGES.LOGOUT_SUCCESSFUL }
+  async logout(refresh_token: string, user_id: string) {
+    await databaseService.refreshTokens.deleteOne({
+      token: refresh_token,
+      user_id: new ObjectId(user_id)
+    })
+    return { message: AUTH_MESSAGES.LOGOUT_SUCCESSFUL }
   }
 }
 

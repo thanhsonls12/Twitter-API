@@ -25,7 +25,7 @@ export const loginController = async (req: Request, res: Response) => {
   const user_id = user._id.toString()
   const { access_token, refresh_token } = await usersService.login(user_id)
   return res.json({
-    message: 'Login successful',
+    message: AUTH_MESSAGES.LOGIN_SUCCESS,
     data: {
       user_id,
       access_token,
@@ -36,6 +36,7 @@ export const loginController = async (req: Request, res: Response) => {
 
 export const logoutController = async (req: Request, res: Response) => {
   const { refresh_token } = req.body
-  const result = await usersService.logout(refresh_token)
+  const user_id = req.decoded_authorization?.user_id
+  const result = await usersService.logout(refresh_token, user_id as string)
   return res.json(result)
 }

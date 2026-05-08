@@ -16,16 +16,15 @@ export const USERS_MESSAGES = {
   CONFIRM_PASSWORD_LENGTH:
     'Confirm password must be between 6 and 50 characters',
   CONFIRM_PASSWORD_MISMATCH: 'Confirm password does not match password',
-  DAY_OF_BIRTH_IS_REQUIRED: 'Day of birth is required',
-  INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
-  USER_NOT_FOUND: 'User not found',
-  LOGOUT_SUCCESSFUL: 'Logout successful'
+  DAY_OF_BIRTH_IS_REQUIRED: 'Day of birth is required'
 } as const
 
 export const AUTH_MESSAGES = {
   LOGIN_SUCCESS: 'Login successful',
-  INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
+
   USER_REGISTERED_SUCCESSFULLY: 'User registered successfully',
+  INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
+  LOGOUT_SUCCESSFUL: 'Logout successful',
   JWT_TOKEN_GENERATION_FAILED: 'JWT token generation failed',
   REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required',
   ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',

@@ -13,15 +13,23 @@ import { wrapRequestHandler } from '@/utils/handler.js'
 
 import express from 'express'
 
+import { authLimiter } from '@/middlewares/rateLimit.middlewares.js'
+
 const usersRouter = express.Router()
 
 usersRouter.post(
   '/register',
+  authLimiter,
   registerValidator,
   wrapRequestHandler(registerController)
 )
 
-usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
+usersRouter.post(
+  '/login',
+  authLimiter,
+  loginValidator,
+  wrapRequestHandler(loginController)
+)
 
 usersRouter.post(
   '/logout',

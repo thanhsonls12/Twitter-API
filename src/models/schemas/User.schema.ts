@@ -22,7 +22,7 @@ interface IUser {
 
 export default class User {
   _id?: ObjectId
-  name: string
+  name?: string
   email: string
   date_of_birth: Date
   password: string
