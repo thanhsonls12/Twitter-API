@@ -31,5 +31,6 @@ export const AUTH_MESSAGES = {
   REFRESH_TOKEN_IS_INVALID: 'Refresh token is invalid',
   USED_REFRESH_TOKEN_OR_NOT_EXISTS:
     'Used refresh token or refresh token does not exist',
-  ACCESS_TOKEN_IS_INVALID: 'Access token is invalid'
+  ACCESS_TOKEN_IS_INVALID: 'Access token is invalid',
+  TOKENS_REFRESHED_SUCCESSFULLY: 'Tokens refreshed successfully'
 } as const

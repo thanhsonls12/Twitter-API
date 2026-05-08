@@ -76,6 +76,20 @@ class UsersService {
     })
     return { message: AUTH_MESSAGES.LOGOUT_SUCCESSFUL }
   }
+  async refreshTokens(user_id: string, refresh_token: string) {
+    const [new_access_token, new_refresh_token] =
+      await this.signAccessAndRefreshTokens(user_id)
+    await databaseService.refreshTokens.findOneAndUpdate(
+      {
+        token: refresh_token,
+        user_id: new ObjectId(user_id)
+      },
+      {
+        $set: { token: new_refresh_token }
+      }
+    )
+    return { access_token: new_access_token, refresh_token: new_refresh_token }
+  }
 }
 
 const usersService = new UsersService()

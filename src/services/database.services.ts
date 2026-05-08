@@ -8,6 +8,7 @@ const uri = envConfig.MONGO_URI
 class DatabaseService {
   private client: MongoClient
   private db: Db
+
   constructor() {
     this.client = new MongoClient(uri)
     this.db = this.client.db(envConfig.DB_NAME)

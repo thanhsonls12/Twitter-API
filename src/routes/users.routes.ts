@@ -1,6 +1,7 @@
 import {
   loginController,
   logoutController,
+  refreshTokensController,
   registerController
 } from '@/controllers/users.controllers.js'
 import {
@@ -36,6 +37,12 @@ usersRouter.post(
   accessTokenValidator,
   refreshTokenValidator,
   wrapRequestHandler(logoutController)
+)
+
+usersRouter.post(
+  '/refresh-token',
+  refreshTokenValidator,
+  wrapRequestHandler(refreshTokensController)
 )
 
 export default usersRouter
