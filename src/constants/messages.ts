@@ -36,5 +36,7 @@ export const AUTH_MESSAGES = {
   EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
   EMAIL_VERIFY_TOKEN_IS_INVALID: 'Email verify token is invalid',
   EMAIL_ALREADY_VERIFIED: 'Email is already verified',
-  EMAIL_VERIFIED_SUCCESSFULLY: 'Email verified successfully'
+  EMAIL_VERIFIED_SUCCESSFULLY: 'Email verified successfully',
+  EMAIL_VERIFY_TOKEN_RESENT_SUCCESSFULLY:
+    'Email verify token resent successfully'
 } as const

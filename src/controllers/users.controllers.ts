@@ -1,4 +1,9 @@
-import { RegisterRequestBody } from '@/models/requests/User.requests.js'
+import {
+  LoginRequestBody,
+  RefreshTokensRequestBody,
+  RegisterRequestBody,
+  VerifyEmailTokenRequestBody
+} from '@/models/requests/User.requests.js'
 import usersService from '@/services/users.services.js'
 import { AUTH_MESSAGES } from '@/constants/messages.js'
 import { Request, Response } from 'express'
@@ -9,13 +14,17 @@ export const registerController = async (
   res: Response
 ) => {
   const result = await usersService.register(req.body)
+
   return res.status(201).json({
     message: AUTH_MESSAGES.USER_REGISTERED_SUCCESSFULLY,
     data: result
   })
 }
 
-export const loginController = async (req: Request, res: Response) => {
+export const loginController = async (
+  req: Request<ParamsDictionary, any, LoginRequestBody>,
+  res: Response
+) => {
   const user = req.user
   if (!user || !user._id) {
     return res.status(401).json({
@@ -34,14 +43,20 @@ export const loginController = async (req: Request, res: Response) => {
   })
 }
 
-export const logoutController = async (req: Request, res: Response) => {
+export const logoutController = async (
+  req: Request<ParamsDictionary, any, RefreshTokensRequestBody>,
+  res: Response
+) => {
   const { refresh_token } = req.body
   const user_id = req.decoded_authorization?.user_id
   const result = await usersService.logout(refresh_token, user_id as string)
   return res.json(result)
 }
 
-export const refreshTokensController = async (req: Request, res: Response) => {
+export const refreshTokensController = async (
+  req: Request<ParamsDictionary, any, RefreshTokensRequestBody>,
+  res: Response
+) => {
   const { refresh_token } = req.body
   const user_id = req.decoded_refresh_token?.user_id
   const result = await usersService.refreshTokens(
@@ -55,7 +70,7 @@ export const refreshTokensController = async (req: Request, res: Response) => {
 }
 
 export const verifyEmailTokenController = async (
-  req: Request,
+  req: Request<ParamsDictionary, any, VerifyEmailTokenRequestBody>,
   res: Response
 ) => {
   const { email_verify_token } = req.body
@@ -69,5 +84,19 @@ export const verifyEmailTokenController = async (
     user_id,
     email_verify_token
   )
+  return res.json(result)
+}
+
+export const resendVerifyEmailController = async (
+  req: Request,
+  res: Response
+) => {
+  const user_id = req.decoded_authorization?.user_id
+  if (!user_id) {
+    return res
+      .status(401)
+      .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
+  }
+  const result = await usersService.resendVerifyEmail(user_id)
   return res.json(result)
 }

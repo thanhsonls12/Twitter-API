@@ -3,6 +3,7 @@ import {
   logoutController,
   refreshTokensController,
   registerController,
+  resendVerifyEmailController,
   verifyEmailTokenController
 } from '@/controllers/users.controllers.js'
 import {
@@ -51,6 +52,12 @@ usersRouter.post(
   '/verify-email',
   verifyEmailTokenValidator,
   wrapRequestHandler(verifyEmailTokenController)
+)
+
+usersRouter.post(
+  '/resend-verify-email',
+  accessTokenValidator,
+  wrapRequestHandler(resendVerifyEmailController)
 )
 
 export default usersRouter

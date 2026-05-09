@@ -81,6 +81,7 @@ class UsersService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
+    console.log('email_verify_token:', email_verify_token)
     return {
       ...result,
       user_id,
@@ -150,12 +151,44 @@ class UsersService {
       {
         $set: {
           email_verify_token: '',
-          verify: UserVerifyStatus.Verified,
-          updated_at: new Date()
-        }
+          verify: UserVerifyStatus.Verified
+        },
+        $currentDate: { updated_at: true }
       }
     )
     return { message: AUTH_MESSAGES.EMAIL_VERIFIED_SUCCESSFULLY }
+  }
+  async resendVerifyEmail(user_id: string) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    if (user.verify === UserVerifyStatus.Verified) {
+      return {
+        message: AUTH_MESSAGES.EMAIL_ALREADY_VERIFIED
+      }
+    }
+    const email_verify_token = await this.signEmailVerifyToken(user_id)
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        $set: {
+          email_verify_token
+        },
+        $currentDate: { updated_at: true }
+      }
+    )
+    console.log('resend email_verify_token', email_verify_token)
+    return {
+      message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_RESENT_SUCCESSFULLY
+    }
   }
 }
 
