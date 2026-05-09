@@ -38,5 +38,11 @@ export const AUTH_MESSAGES = {
   EMAIL_ALREADY_VERIFIED: 'Email is already verified',
   EMAIL_VERIFIED_SUCCESSFULLY: 'Email verified successfully',
   EMAIL_VERIFY_TOKEN_RESENT_SUCCESSFULLY:
-    'Email verify token resent successfully'
+    'Email verify token resent successfully',
+  FORGOT_PASSWORD_EMAIL_SENT:
+    'If a user with the provided email exists, a forgot password email has been sent',
+  FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid',
+  FORGOT_PASSWORD_TOKEN_IS_VALID: 'Forgot password token is valid',
+  RESET_PASSWORD_SUCCESSFULLY: 'Password reset successfully',
+  FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required'
 } as const

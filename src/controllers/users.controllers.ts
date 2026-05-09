@@ -1,8 +1,11 @@
 import {
+  ForgotPasswordRequestBody,
   LoginRequestBody,
   RefreshTokensRequestBody,
   RegisterRequestBody,
-  VerifyEmailTokenRequestBody
+  ResetPasswordRequestBody,
+  VerifyEmailTokenRequestBody,
+  VerifyForgotPasswordTokenRequestBody
 } from '@/models/requests/User.requests.js'
 import usersService from '@/services/users.services.js'
 import { AUTH_MESSAGES } from '@/constants/messages.js'
@@ -98,5 +101,51 @@ export const resendVerifyEmailController = async (
       .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
   }
   const result = await usersService.resendVerifyEmail(user_id)
+  return res.json(result)
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordRequestBody>,
+  res: Response
+) => {
+  const { email } = req.body
+  const result = await usersService.forgotPassword(email)
+  return res.json(result)
+}
+
+export const verifyForgotPasswordTokenController = async (
+  req: Request<ParamsDictionary, any, VerifyForgotPasswordTokenRequestBody>,
+  res: Response
+) => {
+  const { forgot_password_token } = req.body
+  const user_id = req.decoded_forgot_password_token?.user_id
+  if (!user_id) {
+    return res.status(401).json({
+      message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
+    })
+  }
+  const result = await usersService.verifyForgotPasswordToken(
+    user_id,
+    forgot_password_token
+  )
+  return res.json(result)
+}
+
+export const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordRequestBody>,
+  res: Response
+) => {
+  const { forgot_password_token, new_password } = req.body
+  const user_id = req.decoded_forgot_password_token?.user_id
+  if (!user_id) {
+    return res.status(401).json({
+      message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
+    })
+  }
+  const result = await usersService.resetPassword(
+    user_id,
+    forgot_password_token,
+    new_password
+  )
   return res.json(result)
 }

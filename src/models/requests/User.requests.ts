@@ -18,3 +18,17 @@ export interface RefreshTokensRequestBody {
 export interface VerifyEmailTokenRequestBody {
   email_verify_token: string
 }
+
+export interface ForgotPasswordRequestBody {
+  email: string
+}
+
+export interface VerifyForgotPasswordTokenRequestBody {
+  forgot_password_token: string
+}
+
+export interface ResetPasswordRequestBody {
+  forgot_password_token: string
+  new_password: string
+  confirm_new_password: string
+}

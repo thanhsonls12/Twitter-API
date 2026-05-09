@@ -53,6 +53,20 @@ class UsersService {
     })
   }
 
+  private signForgotPasswordToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.ForgotPasswordToken
+      },
+      secretKey: envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN,
+      options: {
+        expiresIn:
+          envConfig.FORGOT_PASSWORD_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
+      }
+    })
+  }
+
   private signAccessAndRefreshTokens(user_id: string) {
     return Promise.all([
       this.signAccessToken(user_id),
@@ -189,6 +203,80 @@ class UsersService {
     return {
       message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_RESENT_SUCCESSFULLY
     }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await databaseService.users.findOne({ email })
+    if (!user) {
+      return {
+        message: AUTH_MESSAGES.FORGOT_PASSWORD_EMAIL_SENT
+      }
+    }
+    const forgot_password_token = await this.signForgotPasswordToken(
+      user._id.toString()
+    )
+    await databaseService.users.updateOne(
+      {
+        _id: user._id
+      },
+      {
+        $set: {
+          forgot_password_token
+        },
+        $currentDate: { updated_at: true }
+      }
+    )
+    console.log('forgot_password_token', forgot_password_token)
+    return {
+      message: AUTH_MESSAGES.FORGOT_PASSWORD_EMAIL_SENT
+    }
+  }
+
+  async verifyForgotPasswordToken(
+    user_id: string,
+    forgot_password_token: string
+  ) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user || user.forgot_password_token !== forgot_password_token) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+
+    return { message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_VALID }
+  }
+
+  async resetPassword(
+    user_id: string,
+    forgot_password_token: string,
+    new_password: string
+  ) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user || user.forgot_password_token !== forgot_password_token) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id),
+        forgot_password_token
+      },
+      {
+        $set: {
+          password: await hashPassword(new_password),
+          forgot_password_token: ''
+        },
+        $currentDate: { updated_at: true }
+      }
+    )
+    return { message: AUTH_MESSAGES.RESET_PASSWORD_SUCCESSFULLY }
   }
 }
 

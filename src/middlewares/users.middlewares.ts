@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { envConfig } from '@/config/env.js'
-import { TokenType } from '@/constants/enums.js'
 import httpStatus from '@/constants/httpStatus.js'
 import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import databaseService from '@/services/database.services.js'
 import usersService from '@/services/users.services.js'
-import { comparePassword, hashPassword } from '@/utils/crypto.js'
+import { comparePassword } from '@/utils/crypto.js'
 import { verifyToken } from '@/utils/jwt.js'
 import { validate } from '@/utils/validation.js'
 import { Request } from 'express'
@@ -181,7 +179,7 @@ export const accessTokenValidator = validate(
 
               request.decoded_authorization = decoded_authorization
               return true
-            } catch (error) {
+            } catch {
               throw new ErrorWithStatus({
                 message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
                 status: httpStatus.UNAUTHORIZED
@@ -254,31 +252,165 @@ export const refreshTokenValidator = validate(
 )
 
 export const verifyEmailTokenValidator = validate(
-  checkSchema({
-    email_verify_token: {
-      notEmpty: {
-        errorMessage: new ErrorWithStatus({
-          message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
-          status: httpStatus.UNAUTHORIZED
-        })
-      },
-      custom: {
-        options: async (value: string, { req }) => {
-          const request = req as Request
-          try {
-            const decoded_email_verify_token = await verifyToken({
-              token: value,
-              secretKey: envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN
-            })
-            request.decoded_email_verify_token = decoded_email_verify_token
-          } catch (error) {
-            throw new ErrorWithStatus({
-              message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
-              status: httpStatus.UNAUTHORIZED
-            })
+  checkSchema(
+    {
+      email_verify_token: {
+        notEmpty: {
+          errorMessage: new ErrorWithStatus({
+            message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
+            status: httpStatus.UNAUTHORIZED
+          })
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            const request = req as Request
+            try {
+              const decoded_email_verify_token = await verifyToken({
+                token: value,
+                secretKey: envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN
+              })
+              request.decoded_email_verify_token = decoded_email_verify_token
+            } catch {
+              throw new ErrorWithStatus({
+                message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+                status: httpStatus.UNAUTHORIZED
+              })
+            }
           }
         }
       }
-    }
-  })
+    },
+    ['body']
+  )
+)
+
+export const forgotPasswordValidator = validate(
+  checkSchema(
+    {
+      email: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+        },
+        isEmail: {
+          errorMessage: USERS_MESSAGES.INVALID_EMAIL_FORMAT
+        },
+        normalizeEmail: true,
+        trim: true
+      }
+    },
+    ['body']
+  )
+)
+
+export const verifyForgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        notEmpty: {
+          errorMessage: new ErrorWithStatus({
+            message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
+            status: httpStatus.UNAUTHORIZED
+          })
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            const request = req as Request
+            try {
+              const decoded_forgot_password_token = await verifyToken({
+                token: value,
+                secretKey: envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN
+              })
+              request.decoded_forgot_password_token =
+                decoded_forgot_password_token
+              return true
+            } catch {
+              throw new ErrorWithStatus({
+                message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+                status: httpStatus.UNAUTHORIZED
+              })
+            }
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const resetPasswordValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        notEmpty: {
+          errorMessage: new ErrorWithStatus({
+            message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
+            status: httpStatus.UNAUTHORIZED
+          })
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            const request = req as Request
+            try {
+              const decoded_forgot_password_token = await verifyToken({
+                token: value,
+                secretKey: envConfig.JWT_SECRET_FORGOT_PASSWORD_TOKEN
+              })
+              request.decoded_forgot_password_token =
+                decoded_forgot_password_token
+              return true
+            } catch {
+              throw new ErrorWithStatus({
+                message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+                status: httpStatus.UNAUTHORIZED
+              })
+            }
+          }
+        }
+      },
+      new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 6, max: 50 },
+          errorMessage: USERS_MESSAGES.PASSWORD_LENGTH
+        },
+        isStrongPassword: {
+          options: {
+            minLength: 6,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1
+          },
+          errorMessage: USERS_MESSAGES.PASSWORD_STRENGTH
+        }
+      },
+      confirm_new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 6, max: 50 },
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH
+        },
+
+        custom: {
+          options: (value, { req }) => {
+            if (value !== req.body.new_password) {
+              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MISMATCH)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
 )

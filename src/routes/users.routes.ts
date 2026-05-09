@@ -1,17 +1,23 @@
 import {
+  forgotPasswordController,
   loginController,
   logoutController,
   refreshTokensController,
   registerController,
   resendVerifyEmailController,
-  verifyEmailTokenController
+  resetPasswordController,
+  verifyEmailTokenController,
+  verifyForgotPasswordTokenController
 } from '@/controllers/users.controllers.js'
 import {
   accessTokenValidator,
+  forgotPasswordValidator,
   loginValidator,
   refreshTokenValidator,
   registerValidator,
-  verifyEmailTokenValidator
+  resetPasswordValidator,
+  verifyEmailTokenValidator,
+  verifyForgotPasswordTokenValidator
 } from '@/middlewares/users.middlewares.js'
 import { wrapRequestHandler } from '@/utils/handler.js'
 
@@ -58,6 +64,25 @@ usersRouter.post(
   '/resend-verify-email',
   accessTokenValidator,
   wrapRequestHandler(resendVerifyEmailController)
+)
+
+usersRouter.post(
+  '/forgot-password',
+  authLimiter,
+  forgotPasswordValidator,
+  wrapRequestHandler(forgotPasswordController)
+)
+
+usersRouter.post(
+  '/verify-forgot-password-token',
+  verifyForgotPasswordTokenValidator,
+  wrapRequestHandler(verifyForgotPasswordTokenController)
+)
+
+usersRouter.post(
+  '/reset-password',
+  resetPasswordValidator,
+  wrapRequestHandler(resetPasswordController)
 )
 
 export default usersRouter

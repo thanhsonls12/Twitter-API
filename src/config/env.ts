@@ -11,7 +11,9 @@ const requiredEnvVariables = [
   'DB_NAME',
   'USERS_COLLECTION',
   'REFRESH_TOKENS_COLLECTION',
-  'EXPIRE_AFTER_SECONDS'
+  'EXPIRE_AFTER_SECONDS',
+  'JWT_SECRET_FORGOT_PASSWORD_TOKEN',
+  'FORGOT_PASSWORD_TOKEN_EXPIRES_IN'
 ] as const
 
 for (const envName of requiredEnvVariables) {
@@ -42,5 +44,9 @@ export const envConfig = {
   REFRESH_TOKENS_COLLECTION: process.env.REFRESH_TOKENS_COLLECTION as string,
   EXPIRE_AFTER_SECONDS: expireAfterSeconds,
   PORT: process.env.PORT ?? '3000',
-  NODE_ENV: process.env.NODE_ENV ?? 'development'
+  NODE_ENV: process.env.NODE_ENV ?? 'development',
+  JWT_SECRET_FORGOT_PASSWORD_TOKEN: process.env
+    .JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+  FORGOT_PASSWORD_TOKEN_EXPIRES_IN: process.env
+    .FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string
 }
