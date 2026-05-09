@@ -3,12 +3,15 @@ import databaseService from './database.services.js'
 import { RegisterRequestBody } from '@/models/requests/User.requests.js'
 import { hashPassword } from '@/utils/crypto.js'
 import { signToken } from '@/utils/jwt.js'
-import { TokenType } from '@/constants/enums.js'
+import { TokenType, UserVerifyStatus } from '@/constants/enums.js'
 import { envConfig } from '@/config/env.js'
 import { SignOptions } from 'jsonwebtoken'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
 import { ObjectId } from 'mongodb'
 import { AUTH_MESSAGES } from '@/constants/messages.js'
+import { ErrorWithStatus } from '@/models/Errors.js'
+import httpStatus from '@/constants/httpStatus.js'
+
 class UsersService {
   private signAccessToken(user_id: string) {
     return signToken({
@@ -16,6 +19,7 @@ class UsersService {
         user_id,
         token_type: TokenType.AccessToken
       },
+      secretKey: envConfig.JWT_SECRET_ACCESS_TOKEN,
       options: {
         expiresIn: envConfig.ACCESS_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
       }
@@ -27,9 +31,24 @@ class UsersService {
         user_id,
         token_type: TokenType.RefreshToken
       },
+      secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN,
       options: {
         expiresIn:
           envConfig.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
+      }
+    })
+  }
+
+  private signEmailVerifyToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.EmailVerifyToken
+      },
+      secretKey: envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN,
+      options: {
+        expiresIn:
+          envConfig.EMAIL_VERIFY_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
       }
     })
   }
@@ -42,20 +61,32 @@ class UsersService {
   }
 
   async register(payload: RegisterRequestBody) {
+    const user_id = new ObjectId()
+    const email_verify_token = await this.signEmailVerifyToken(
+      user_id.toString()
+    )
     const result = await databaseService.users.insertOne(
       new User({
+        _id: user_id,
         ...payload,
+        email_verify_token,
         date_of_birth: new Date(payload.day_of_birth),
         password: await hashPassword(payload.password)
       })
     )
-    const user_id = result.insertedId.toString()
-    const [access_token, refresh_token] =
-      await this.signAccessAndRefreshTokens(user_id)
+
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens(
+      user_id.toString()
+    )
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
-    return { ...result, user_id, access_token, refresh_token }
+    return {
+      ...result,
+      user_id,
+      access_token,
+      refresh_token
+    }
   }
   async checkEmailExists(email: string) {
     const user = await databaseService.users.findOne({ email })
@@ -89,6 +120,42 @@ class UsersService {
       }
     )
     return { access_token: new_access_token, refresh_token: new_refresh_token }
+  }
+  async verifyEmailToken(user_id: string, email_verify_token: string) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    if (user.verify === UserVerifyStatus.Verified) {
+      return {
+        message: AUTH_MESSAGES.EMAIL_ALREADY_VERIFIED
+      }
+    }
+    if (user.email_verify_token !== email_verify_token) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id),
+        email_verify_token
+      },
+      {
+        $set: {
+          email_verify_token: '',
+          verify: UserVerifyStatus.Verified,
+          updated_at: new Date()
+        }
+      }
+    )
+    return { message: AUTH_MESSAGES.EMAIL_VERIFIED_SUCCESSFULLY }
   }
 }
 

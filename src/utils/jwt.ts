@@ -1,17 +1,17 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
-import { envConfig } from '@/config/env.js'
+
 import { AUTH_MESSAGES } from '@/constants/messages.js'
 import { TokenPayload } from '@/@types/express.js'
 
 export const signToken = ({
   payload,
-  secretKey = envConfig.JWT_SECRET,
+  secretKey,
   options = {
     algorithm: 'HS256'
   }
 }: {
   payload: string | Buffer | object
-  secretKey?: string
+  secretKey: string
   options?: SignOptions
 }): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -29,10 +29,10 @@ export const signToken = ({
 
 export const verifyToken = ({
   token,
-  secretKey = envConfig.JWT_SECRET
+  secretKey
 }: {
   token: string
-  secretKey?: string
+  secretKey: string
 }) => {
   return new Promise<TokenPayload>((resolve, reject) => {
     jwt.verify(token, secretKey, (err, decoded) => {

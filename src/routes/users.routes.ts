@@ -2,13 +2,15 @@ import {
   loginController,
   logoutController,
   refreshTokensController,
-  registerController
+  registerController,
+  verifyEmailTokenController
 } from '@/controllers/users.controllers.js'
 import {
   accessTokenValidator,
   loginValidator,
   refreshTokenValidator,
-  registerValidator
+  registerValidator,
+  verifyEmailTokenValidator
 } from '@/middlewares/users.middlewares.js'
 import { wrapRequestHandler } from '@/utils/handler.js'
 
@@ -43,6 +45,12 @@ usersRouter.post(
   '/refresh-token',
   refreshTokenValidator,
   wrapRequestHandler(refreshTokensController)
+)
+
+usersRouter.post(
+  '/verify-email',
+  verifyEmailTokenValidator,
+  wrapRequestHandler(verifyEmailTokenController)
 )
 
 export default usersRouter

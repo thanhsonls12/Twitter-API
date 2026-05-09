@@ -1,9 +1,12 @@
 import 'dotenv/config'
 
 const requiredEnvVariables = [
-  'JWT_SECRET',
+  'JWT_SECRET_ACCESS_TOKEN',
+  'JWT_SECRET_REFRESH_TOKEN',
+  'JWT_SECRET_VERIFY_EMAIL_TOKEN',
   'ACCESS_TOKEN_EXPIRES_IN',
   'REFRESH_TOKEN_EXPIRES_IN',
+  'EMAIL_VERIFY_TOKEN_EXPIRES_IN',
   'MONGO_URI',
   'DB_NAME',
   'USERS_COLLECTION',
@@ -25,9 +28,14 @@ if (Number.isNaN(expireAfterSeconds)) {
 }
 
 export const envConfig = {
-  JWT_SECRET: process.env.JWT_SECRET as string,
+  JWT_SECRET_ACCESS_TOKEN: process.env.JWT_SECRET_ACCESS_TOKEN as string,
+  JWT_SECRET_REFRESH_TOKEN: process.env.JWT_SECRET_REFRESH_TOKEN as string,
+  JWT_SECRET_VERIFY_EMAIL_TOKEN: process.env
+    .JWT_SECRET_VERIFY_EMAIL_TOKEN as string,
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN as string,
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN as string,
+  EMAIL_VERIFY_TOKEN_EXPIRES_IN: process.env
+    .EMAIL_VERIFY_TOKEN_EXPIRES_IN as string,
   MONGO_URI: process.env.MONGO_URI as string,
   DB_NAME: process.env.DB_NAME as string,
   USERS_COLLECTION: process.env.USERS_COLLECTION as string,

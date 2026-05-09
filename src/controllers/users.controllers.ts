@@ -53,3 +53,21 @@ export const refreshTokensController = async (req: Request, res: Response) => {
     data: result
   })
 }
+
+export const verifyEmailTokenController = async (
+  req: Request,
+  res: Response
+) => {
+  const { email_verify_token } = req.body
+  const user_id = req.decoded_email_verify_token?.user_id
+  if (!user_id) {
+    return res.status(401).json({
+      message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID
+    })
+  }
+  const result = await usersService.verifyEmailToken(
+    user_id,
+    email_verify_token
+  )
+  return res.json(result)
+}

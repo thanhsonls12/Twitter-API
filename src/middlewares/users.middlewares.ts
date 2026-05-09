@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { envConfig } from '@/config/env.js'
 import { TokenType } from '@/constants/enums.js'
 import httpStatus from '@/constants/httpStatus.js'
 import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
@@ -157,7 +158,10 @@ export const accessTokenValidator = validate(
     {
       authorization: {
         notEmpty: {
-          errorMessage: AUTH_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+          errorMessage: new ErrorWithStatus({
+            message: AUTH_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+            status: httpStatus.UNAUTHORIZED
+          })
         },
         custom: {
           options: async (values: string, { req }) => {
@@ -171,14 +175,10 @@ export const accessTokenValidator = validate(
             }
             try {
               const decoded_authorization = await verifyToken({
-                token: access_token
+                token: access_token,
+                secretKey: envConfig.JWT_SECRET_ACCESS_TOKEN
               })
-              if (decoded_authorization.token_type !== TokenType.AccessToken) {
-                throw new ErrorWithStatus({
-                  message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
-                  status: httpStatus.UNAUTHORIZED
-                })
-              }
+
               request.decoded_authorization = decoded_authorization
               return true
             } catch (error) {
@@ -200,7 +200,10 @@ export const refreshTokenValidator = validate(
     {
       refresh_token: {
         notEmpty: {
-          errorMessage: AUTH_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
+          errorMessage: new ErrorWithStatus({
+            message: AUTH_MESSAGES.REFRESH_TOKEN_IS_REQUIRED,
+            status: httpStatus.UNAUTHORIZED
+          })
         },
         custom: {
           options: async (value: string, { req }) => {
@@ -208,15 +211,13 @@ export const refreshTokenValidator = validate(
             try {
               const [decoded_refresh_token, refresh_token_doc] =
                 await Promise.all([
-                  verifyToken({ token: value }),
+                  verifyToken({
+                    token: value,
+                    secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN
+                  }),
                   databaseService.refreshTokens.findOne({ token: value })
                 ])
-              if (decoded_refresh_token.token_type !== TokenType.RefreshToken) {
-                throw new ErrorWithStatus({
-                  message: AUTH_MESSAGES.REFRESH_TOKEN_IS_INVALID,
-                  status: httpStatus.UNAUTHORIZED
-                })
-              }
+
               if (!refresh_token_doc) {
                 throw new ErrorWithStatus({
                   message: AUTH_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXISTS,
@@ -250,4 +251,34 @@ export const refreshTokenValidator = validate(
     },
     ['body']
   )
+)
+
+export const verifyEmailTokenValidator = validate(
+  checkSchema({
+    email_verify_token: {
+      notEmpty: {
+        errorMessage: new ErrorWithStatus({
+          message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
+          status: httpStatus.UNAUTHORIZED
+        })
+      },
+      custom: {
+        options: async (value: string, { req }) => {
+          const request = req as Request
+          try {
+            const decoded_email_verify_token = await verifyToken({
+              token: value,
+              secretKey: envConfig.JWT_SECRET_VERIFY_EMAIL_TOKEN
+            })
+            request.decoded_email_verify_token = decoded_email_verify_token
+          } catch (error) {
+            throw new ErrorWithStatus({
+              message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+              status: httpStatus.UNAUTHORIZED
+            })
+          }
+        }
+      }
+    }
+  })
 )
