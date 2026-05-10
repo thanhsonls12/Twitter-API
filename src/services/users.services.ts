@@ -8,7 +8,7 @@ import { envConfig } from '@/config/env.js'
 import { SignOptions } from 'jsonwebtoken'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
 import { ObjectId } from 'mongodb'
-import { AUTH_MESSAGES } from '@/constants/messages.js'
+import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
 
@@ -277,6 +277,28 @@ class UsersService {
       }
     )
     return { message: AUTH_MESSAGES.RESET_PASSWORD_SUCCESSFULLY }
+  }
+
+  async getMe(user_id: string) {
+    const user = await databaseService.users.findOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+    return user
   }
 }
 

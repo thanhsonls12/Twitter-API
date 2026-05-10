@@ -8,7 +8,7 @@ import {
   VerifyForgotPasswordTokenRequestBody
 } from '@/models/requests/User.requests.js'
 import usersService from '@/services/users.services.js'
-import { AUTH_MESSAGES } from '@/constants/messages.js'
+import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 
@@ -148,4 +148,18 @@ export const resetPasswordController = async (
     new_password
   )
   return res.json(result)
+}
+
+export const getMeController = async (req: Request, res: Response) => {
+  const user_id = req.decoded_authorization?.user_id
+  if (!user_id) {
+    return res
+      .status(401)
+      .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
+  }
+  const result = await usersService.getMe(user_id)
+  return res.json({
+    message: USERS_MESSAGES.USER_FETCHED_SUCCESSFULLY,
+    data: result
+  })
 }

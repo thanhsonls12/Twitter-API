@@ -16,7 +16,9 @@ export const USERS_MESSAGES = {
   CONFIRM_PASSWORD_LENGTH:
     'Confirm password must be between 6 and 50 characters',
   CONFIRM_PASSWORD_MISMATCH: 'Confirm password does not match password',
-  DAY_OF_BIRTH_IS_REQUIRED: 'Day of birth is required'
+  DAY_OF_BIRTH_IS_REQUIRED: 'Day of birth is required',
+  USER_FETCHED_SUCCESSFULLY: 'User fetched successfully',
+  USER_NOT_FOUND: 'User not found'
 } as const
 
 export const AUTH_MESSAGES = {

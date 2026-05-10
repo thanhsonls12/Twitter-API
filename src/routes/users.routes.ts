@@ -1,5 +1,6 @@
 import {
   forgotPasswordController,
+  getMeController,
   loginController,
   logoutController,
   refreshTokensController,
@@ -26,6 +27,8 @@ import express from 'express'
 import { authLimiter } from '@/middlewares/rateLimit.middlewares.js'
 
 const usersRouter = express.Router()
+
+/* -----POST-----*/
 
 usersRouter.post(
   '/register',
@@ -83,6 +86,13 @@ usersRouter.post(
   '/reset-password',
   resetPasswordValidator,
   wrapRequestHandler(resetPasswordController)
+)
+
+/* -----GET-----*/
+usersRouter.get(
+  '/me',
+  accessTokenValidator,
+  wrapRequestHandler(getMeController)
 )
 
 export default usersRouter
