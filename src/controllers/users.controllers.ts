@@ -4,6 +4,7 @@ import {
   RefreshTokensRequestBody,
   RegisterRequestBody,
   ResetPasswordRequestBody,
+  UpdateMeRequestBody,
   VerifyEmailTokenRequestBody,
   VerifyForgotPasswordTokenRequestBody
 } from '@/models/requests/User.requests.js'
@@ -35,7 +36,10 @@ export const loginController = async (
     })
   }
   const user_id = user._id.toString()
-  const { access_token, refresh_token } = await usersService.login(user_id)
+  const { access_token, refresh_token } = await usersService.login({
+    user_id,
+    verify: user.verify
+  })
   return res.json({
     message: AUTH_MESSAGES.LOGIN_SUCCESS,
     data: {
@@ -62,10 +66,10 @@ export const refreshTokensController = async (
 ) => {
   const { refresh_token } = req.body
   const user_id = req.decoded_refresh_token?.user_id
-  const result = await usersService.refreshTokens(
-    user_id as string,
+  const result = await usersService.refreshTokens({
+    user_id: user_id as string,
     refresh_token
-  )
+  })
   return res.json({
     message: AUTH_MESSAGES.TOKENS_REFRESHED_SUCCESSFULLY,
     data: result
@@ -76,8 +80,9 @@ export const verifyEmailTokenController = async (
   req: Request<ParamsDictionary, any, VerifyEmailTokenRequestBody>,
   res: Response
 ) => {
-  const { email_verify_token } = req.body
+  const { email_verify_token, refresh_token: old_refresh_token } = req.body
   const user_id = req.decoded_email_verify_token?.user_id
+  const refresh_token_user_id = req.decoded_refresh_token?.user_id
   if (!user_id) {
     return res.status(401).json({
       message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID
@@ -85,7 +90,9 @@ export const verifyEmailTokenController = async (
   }
   const result = await usersService.verifyEmailToken(
     user_id,
-    email_verify_token
+    email_verify_token,
+    old_refresh_token,
+    refresh_token_user_id as string
   )
   return res.json(result)
 }
@@ -160,6 +167,24 @@ export const getMeController = async (req: Request, res: Response) => {
   const result = await usersService.getMe(user_id)
   return res.json({
     message: USERS_MESSAGES.USER_FETCHED_SUCCESSFULLY,
+    data: result
+  })
+}
+
+export const updateMeController = async (
+  req: Request<ParamsDictionary, any, UpdateMeRequestBody>,
+  res: Response
+) => {
+  const user_id = req.decoded_authorization?.user_id
+  if (!user_id) {
+    return res
+      .status(401)
+      .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
+  }
+  const updateData = req.body
+  const result = await usersService.updateMe(user_id, updateData)
+  return res.json({
+    message: USERS_MESSAGES.USER_UPDATED_SUCCESSFULLY,
     data: result
   })
 }

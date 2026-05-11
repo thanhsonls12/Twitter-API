@@ -1,4 +1,6 @@
+import { TokenPayload } from '@/@types/express.js'
 import { envConfig } from '@/config/env.js'
+import { UserVerifyStatus } from '@/constants/enums.js'
 import httpStatus from '@/constants/httpStatus.js'
 import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
@@ -7,7 +9,7 @@ import usersService from '@/services/users.services.js'
 import { comparePassword } from '@/utils/crypto.js'
 import { verifyToken } from '@/utils/jwt.js'
 import { validate } from '@/utils/validation.js'
-import { Request } from 'express'
+import { NextFunction, Request, Response } from 'express'
 
 import { checkSchema } from 'express-validator'
 
@@ -89,9 +91,9 @@ export const registerValidator = validate(
           errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MISMATCH
         }
       },
-      day_of_birth: {
+      date_of_birth: {
         notEmpty: {
-          errorMessage: USERS_MESSAGES.DAY_OF_BIRTH_IS_REQUIRED
+          errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
         },
         isISO8601: {
           options: {
@@ -130,6 +132,7 @@ export const loginValidator = validate(
             if (!isMatch) {
               throw new Error(AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD)
             }
+            console.log('email_verify_token', user.email_verify_token)
             req.user = user
           }
         }
@@ -278,6 +281,14 @@ export const verifyEmailTokenValidator = validate(
             }
           }
         }
+      },
+      refresh_token: {
+        notEmpty: {
+          errorMessage: new ErrorWithStatus({
+            message: AUTH_MESSAGES.REFRESH_TOKEN_IS_REQUIRED,
+            status: httpStatus.UNAUTHORIZED
+          })
+        }
       }
     },
     ['body']
@@ -409,6 +420,159 @@ export const resetPasswordValidator = validate(
             return true
           }
         }
+      }
+    },
+    ['body']
+  )
+)
+
+export const verifiedUserValidator = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { verify } = req.decoded_authorization as TokenPayload
+  console.log('verify: ', verify)
+  if (verify !== UserVerifyStatus.Verified) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.USER_NOT_VERIFIED,
+      status: httpStatus.FORBIDDEN
+    })
+  }
+  next()
+}
+
+export const updateMeValidator = validate(
+  checkSchema(
+    {
+      body: {
+        custom: {
+          options: (_, { req }) => {
+            if (
+              !req.body ||
+              typeof req.body !== 'object' ||
+              Array.isArray(req.body)
+            ) {
+              throw new Error('Request body must be a JSON object')
+            }
+            const allowedFields = [
+              'name',
+              'date_of_birth',
+              'bio',
+              'location',
+              'website',
+              'username',
+              'avatar',
+              'cover_photo'
+            ]
+            const bodyKeys = Object.keys(req.body)
+            if (bodyKeys.length === 0) {
+              throw new Error('At least one field must be provided for update')
+            }
+            const invalidFields = bodyKeys.filter(
+              (key) => !allowedFields.includes(key)
+            )
+            if (invalidFields.length > 0) {
+              throw new Error(`Invalid fields: ${invalidFields.join(', ')}`)
+            }
+            return true
+          }
+        }
+      },
+      name: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.NAME_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 1, max: 50 },
+          errorMessage: USERS_MESSAGES.NAME_LENGTH
+        },
+        trim: true
+      },
+      date_of_birth: {
+        optional: true,
+        isISO8601: {
+          options: {
+            strict: true,
+            strictSeparator: true
+          },
+          errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
+        }
+      },
+      bio: {
+        optional: true,
+        isString: {
+          errorMessage: 'Bio must be a string'
+        },
+        isLength: {
+          options: { max: 160 },
+          errorMessage: 'Bio must be at most 160 characters long'
+        },
+        trim: true
+      },
+      location: {
+        optional: true,
+        isString: {
+          errorMessage: 'Location must be a string'
+        },
+        isLength: {
+          options: { max: 160 },
+          errorMessage: 'Location must be at most 160 characters long'
+        },
+        trim: true
+      },
+      website: {
+        optional: true,
+        isURL: {
+          errorMessage: 'Website must be a valid URL'
+        },
+        trim: true
+      },
+      username: {
+        optional: true,
+        isString: {
+          errorMessage: 'Username must be a string'
+        },
+        isLength: {
+          options: { min: 2, max: 50 },
+          errorMessage: 'Username must be between 2 and 50 characters long'
+        },
+        matches: {
+          options: /^[a-zA-Z0-9_]+$/,
+          errorMessage:
+            'Username can only contain letters, numbers, and underscores'
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            const existingUser = await databaseService.users.findOne({
+              username: value
+            })
+            if (
+              existingUser &&
+              existingUser._id.toString() !==
+                (req as Request).decoded_authorization?.user_id
+            ) {
+              throw new Error('Username already exists')
+            }
+            return true
+          }
+        },
+        trim: true
+      },
+      avatar: {
+        optional: true,
+        isURL: {
+          errorMessage: 'Avatar must be a valid URL'
+        },
+        trim: true
+      },
+      cover_photo: {
+        optional: true,
+        isURL: {
+          errorMessage: 'Cover photo must be a valid URL'
+        },
+        trim: true
       }
     },
     ['body']

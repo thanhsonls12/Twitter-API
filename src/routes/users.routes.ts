@@ -7,6 +7,7 @@ import {
   registerController,
   resendVerifyEmailController,
   resetPasswordController,
+  updateMeController,
   verifyEmailTokenController,
   verifyForgotPasswordTokenController
 } from '@/controllers/users.controllers.js'
@@ -17,6 +18,8 @@ import {
   refreshTokenValidator,
   registerValidator,
   resetPasswordValidator,
+  updateMeValidator,
+  verifiedUserValidator,
   verifyEmailTokenValidator,
   verifyForgotPasswordTokenValidator
 } from '@/middlewares/users.middlewares.js'
@@ -60,6 +63,7 @@ usersRouter.post(
 usersRouter.post(
   '/verify-email',
   verifyEmailTokenValidator,
+  refreshTokenValidator,
   wrapRequestHandler(verifyEmailTokenController)
 )
 
@@ -93,6 +97,15 @@ usersRouter.get(
   '/me',
   accessTokenValidator,
   wrapRequestHandler(getMeController)
+)
+
+/* -----PATCH-----*/
+usersRouter.patch(
+  '/me',
+  accessTokenValidator,
+  verifiedUserValidator,
+  updateMeValidator,
+  wrapRequestHandler(updateMeController)
 )
 
 export default usersRouter

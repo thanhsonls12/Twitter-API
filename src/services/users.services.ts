@@ -1,6 +1,9 @@
 import User from '@/models/schemas/User.schema.js'
 import databaseService from './database.services.js'
-import { RegisterRequestBody } from '@/models/requests/User.requests.js'
+import {
+  RegisterRequestBody,
+  UpdateMeRequestBody
+} from '@/models/requests/User.requests.js'
 import { hashPassword } from '@/utils/crypto.js'
 import { signToken } from '@/utils/jwt.js'
 import { TokenType, UserVerifyStatus } from '@/constants/enums.js'
@@ -13,11 +16,18 @@ import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
 
 class UsersService {
-  private signAccessToken(user_id: string) {
+  private signAccessToken({
+    user_id,
+    verify
+  }: {
+    user_id: string
+    verify: UserVerifyStatus
+  }) {
     return signToken({
       payload: {
         user_id,
-        token_type: TokenType.AccessToken
+        token_type: TokenType.AccessToken,
+        verify
       },
       secretKey: envConfig.JWT_SECRET_ACCESS_TOKEN,
       options: {
@@ -25,11 +35,18 @@ class UsersService {
       }
     })
   }
-  private signRefreshToken(user_id: string) {
+  private signRefreshToken({
+    user_id,
+    verify
+  }: {
+    user_id: string
+    verify: UserVerifyStatus
+  }) {
     return signToken({
       payload: {
         user_id,
-        token_type: TokenType.RefreshToken
+        token_type: TokenType.RefreshToken,
+        verify
       },
       secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN,
       options: {
@@ -67,10 +84,16 @@ class UsersService {
     })
   }
 
-  private signAccessAndRefreshTokens(user_id: string) {
+  private signAccessAndRefreshTokens({
+    user_id,
+    verify
+  }: {
+    user_id: string
+    verify: UserVerifyStatus
+  }) {
     return Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
+      this.signAccessToken({ user_id, verify }),
+      this.signRefreshToken({ user_id, verify })
     ])
   }
 
@@ -84,13 +107,13 @@ class UsersService {
         _id: user_id,
         ...payload,
         email_verify_token,
-        date_of_birth: new Date(payload.day_of_birth),
+        date_of_birth: new Date(payload.date_of_birth),
         password: await hashPassword(payload.password)
       })
     )
 
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens(
-      user_id.toString()
+      { user_id: user_id.toString(), verify: UserVerifyStatus.Unverified }
     )
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
@@ -107,12 +130,29 @@ class UsersService {
     const user = await databaseService.users.findOne({ email })
     return Boolean(user)
   }
-  async login(user_id: string) {
-    const [access_token, refresh_token] =
-      await this.signAccessAndRefreshTokens(user_id)
+  async login({
+    user_id,
+    verify
+  }: {
+    user_id: string
+    verify: UserVerifyStatus
+  }) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens(
+      { user_id, verify }
+    )
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
+
     return { access_token, refresh_token }
   }
   async logout(refresh_token: string, user_id: string) {
@@ -122,21 +162,54 @@ class UsersService {
     })
     return { message: AUTH_MESSAGES.LOGOUT_SUCCESSFUL }
   }
-  async refreshTokens(user_id: string, refresh_token: string) {
+  async refreshTokens({
+    user_id,
+    refresh_token
+  }: {
+    user_id: string
+    refresh_token: string
+  }) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.REFRESH_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
     const [new_access_token, new_refresh_token] =
-      await this.signAccessAndRefreshTokens(user_id)
-    await databaseService.refreshTokens.findOneAndUpdate(
-      {
-        token: refresh_token,
-        user_id: new ObjectId(user_id)
-      },
-      {
-        $set: { token: new_refresh_token }
-      }
-    )
+      await this.signAccessAndRefreshTokens({ user_id, verify: user.verify })
+    const updatedRefreshToken =
+      await databaseService.refreshTokens.findOneAndUpdate(
+        {
+          token: refresh_token,
+          user_id: new ObjectId(user_id)
+        },
+        {
+          $set: { token: new_refresh_token }
+        }
+      )
+    if (!updatedRefreshToken) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.REFRESH_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
     return { access_token: new_access_token, refresh_token: new_refresh_token }
   }
-  async verifyEmailToken(user_id: string, email_verify_token: string) {
+  async verifyEmailToken(
+    user_id: string,
+    email_verify_token: string,
+    old_refresh_token: string,
+    refresh_token_user_id: string
+  ) {
+    if (user_id !== refresh_token_user_id) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.REFRESH_TOKEN_IS_INVALID,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
     const user = await databaseService.users.findOne({
       _id: new ObjectId(user_id)
     })
@@ -170,7 +243,33 @@ class UsersService {
         $currentDate: { updated_at: true }
       }
     )
-    return { message: AUTH_MESSAGES.EMAIL_VERIFIED_SUCCESSFULLY }
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens(
+      {
+        user_id,
+        verify: UserVerifyStatus.Verified
+      }
+    )
+    const updatedRefreshToken =
+      await databaseService.refreshTokens.findOneAndUpdate(
+        {
+          user_id: new ObjectId(user_id),
+          token: old_refresh_token
+        },
+        {
+          $set: { token: refresh_token }
+        }
+      )
+    if (!updatedRefreshToken) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXISTS,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    return {
+      message: AUTH_MESSAGES.EMAIL_VERIFIED_SUCCESSFULLY,
+      access_token,
+      refresh_token
+    }
   }
   async resendVerifyEmail(user_id: string) {
     const user = await databaseService.users.findOne({
@@ -285,6 +384,37 @@ class UsersService {
         _id: new ObjectId(user_id)
       },
       {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+    return user
+  }
+  async updateMe(user_id: string, payload: UpdateMeRequestBody = {}) {
+    const { date_of_birth, ...rest } = payload
+    const updatePayload = {
+      ...rest,
+      ...(date_of_birth && { date_of_birth: new Date(date_of_birth) })
+    }
+    const user = await databaseService.users.findOneAndUpdate(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        $set: updatePayload,
+        $currentDate: { updated_at: true }
+      },
+      {
+        returnDocument: 'after',
         projection: {
           password: 0,
           email_verify_token: 0,
