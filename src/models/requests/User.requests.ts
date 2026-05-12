@@ -45,3 +45,8 @@ export interface UpdateMeRequestBody {
   cover_photo?: string
 }
 
+export interface ChangePasswordRequestBody {
+  current_password: string
+  new_password: string
+  confirm_new_password: string
+}

@@ -665,3 +665,65 @@ export const followValidator = validate(
     ['params']
   )
 )
+
+export const changePasswordValidator = validate(
+  checkSchema(
+    {
+      current_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 6, max: 50 },
+          errorMessage: USERS_MESSAGES.PASSWORD_LENGTH
+        }
+      },
+      new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 6, max: 50 },
+          errorMessage: USERS_MESSAGES.PASSWORD_LENGTH
+        },
+        isStrongPassword: {
+          options: {
+            minLength: 6,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1
+          },
+          errorMessage: USERS_MESSAGES.PASSWORD_STRENGTH
+        }
+      },
+      confirm_new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 6, max: 50 },
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH
+        },
+        custom: {
+          options: (value, { req }) => {
+            if (value !== req.body.new_password) {
+              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MISMATCH)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)

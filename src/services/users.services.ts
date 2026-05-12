@@ -4,7 +4,7 @@ import {
   RegisterRequestBody,
   UpdateMeRequestBody
 } from '@/models/requests/User.requests.js'
-import { hashPassword } from '@/utils/crypto.js'
+import { comparePassword, hashPassword } from '@/utils/crypto.js'
 import { signToken } from '@/utils/jwt.js'
 import { TokenType, UserVerifyStatus } from '@/constants/enums.js'
 import { envConfig } from '@/config/env.js'
@@ -527,6 +527,46 @@ class UsersService {
       })
     }
     return result
+  }
+  async changePassword(
+    user_id: string,
+    current_password: string,
+    new_password: string
+  ) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+
+    if (!(await comparePassword(current_password, user.password))) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.CURRENT_PASSWORD_IS_INCORRECT,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        $set: {
+          password: await hashPassword(new_password)
+        }
+      }
+    )
+    await databaseService.refreshTokens.deleteMany({
+      user_id: new ObjectId(user_id)
+    })
+    return {
+      message: USERS_MESSAGES.PASSWORD_CHANGED_SUCCESSFULLY
+    }
   }
 }
 

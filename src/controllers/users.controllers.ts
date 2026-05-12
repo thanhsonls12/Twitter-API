@@ -1,4 +1,5 @@
 import {
+  ChangePasswordRequestBody,
   ForgotPasswordRequestBody,
   LoginRequestBody,
   RefreshTokensRequestBody,
@@ -230,5 +231,25 @@ export const unFollowController = async (req: Request, res: Response) => {
   }
   const target_user_id = req.params.user_id as string
   const result = await usersService.unFollow(user_id, target_user_id)
+  return res.json(result)
+}
+
+export const changePasswordController = async (
+  req: Request<ParamsDictionary, any, ChangePasswordRequestBody>,
+  res: Response
+) => {
+  const user_id = req.decoded_authorization?.user_id
+  if (!user_id) {
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
+    })
+  }
+  const { current_password, new_password } = req.body
+  const result = await usersService.changePassword(
+    user_id,
+    current_password,
+    new_password
+  )
   return res.json(result)
 }

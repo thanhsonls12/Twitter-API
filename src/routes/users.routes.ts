@@ -1,4 +1,5 @@
 import {
+  changePasswordController,
   followController,
   forgotPasswordController,
   getMeController,
@@ -16,6 +17,7 @@ import {
 } from '@/controllers/users.controllers.js'
 import {
   accessTokenValidator,
+  changePasswordValidator,
   followValidator,
   forgotPasswordValidator,
   getUserProfileValidator,
@@ -106,14 +108,6 @@ usersRouter.post(
   wrapRequestHandler(followController)
 )
 
-usersRouter.delete(
-  '/:user_id/follow',
-  accessTokenValidator,
-  verifiedUserValidator,
-  followValidator,
-  wrapRequestHandler(unFollowController)
-)
-
 /* -----GET-----*/
 usersRouter.get(
   '/me',
@@ -135,6 +129,24 @@ usersRouter.patch(
   updateMeBodyValidator,
   updateMeValidator,
   wrapRequestHandler(updateMeController)
+)
+
+/* -----PUT-----*/
+usersRouter.put(
+  '/change-password',
+  accessTokenValidator,
+  verifiedUserValidator,
+  changePasswordValidator,
+  wrapRequestHandler(changePasswordController)
+)
+
+/* -----DELETE-----*/
+usersRouter.delete(
+  '/:user_id/follow',
+  accessTokenValidator,
+  verifiedUserValidator,
+  followValidator,
+  wrapRequestHandler(unFollowController)
 )
 
 export default usersRouter
