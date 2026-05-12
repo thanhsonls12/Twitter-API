@@ -20,7 +20,32 @@ export const USERS_MESSAGES = {
   USER_FETCHED_SUCCESSFULLY: 'User fetched successfully',
   USER_NOT_FOUND: 'User not found',
   USER_NOT_VERIFIED: 'User is not verified',
-  USER_UPDATED_SUCCESSFULLY: 'User updated successfully'
+  USER_UPDATED_SUCCESSFULLY: 'User updated successfully',
+  DATE_OF_BIRTH_MUST_BE_IN_PAST: 'Date of birth must be in the past',
+  INVALID_DATE_OF_BIRTH_FORMAT:
+    'Invalid date of birth format, expected YYYY-MM-DD',
+  NO_FIELDS_TO_UPDATE: 'No fields to update',
+  BODY_MUST_BE_JSON_OBJECT: 'Request body must be a JSON object',
+  BIO_MUST_BE_STRING: 'Bio must be a string',
+  BIO_LENGTH: 'Bio must be at most 160 characters long',
+  LOCATION_MUST_BE_STRING: 'Location must be a string',
+  LOCATION_LENGTH: 'Location must be at most 160 characters long',
+  WEBSITE_MUST_BE_VALID_URL: 'Website must be a valid URL',
+  USERNAME_MUST_BE_STRING: 'Username must be a string',
+  USERNAME_LENGTH: 'Username must be between 2 and 50 characters long',
+  USERNAME_INVALID_CHARACTERS:
+    'Username can only contain letters, numbers, and underscores',
+  USERNAME_ALREADY_EXISTS: 'Username already exists',
+  AVATAR_MUST_BE_VALID_URL: 'Avatar must be a valid URL',
+  COVER_PHOTO_MUST_BE_VALID_URL: 'Cover photo must be a valid URL',
+  USERNAME_IS_REQUIRED: 'Username is required',
+  USER_PROFILE_FETCHED_SUCCESSFULLY: 'User profile fetched successfully',
+  USERID_IS_REQUIRED: 'User ID is required',
+  USERID_MUST_BE_STRING: 'User ID must be a string',
+  USERID_LENGTH: 'User ID must be between 2 and 50 characters long',
+  CANNOT_FOLLOW_YOURSELF: 'You cannot follow yourself',
+  USERID_INVALID: 'User ID is invalid',
+  ALREADY_FOLLOWED: 'You already followed this user'
 } as const
 
 export const AUTH_MESSAGES = {

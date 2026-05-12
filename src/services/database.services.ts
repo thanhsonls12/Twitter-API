@@ -2,6 +2,7 @@ import { Collection, Db, MongoClient } from 'mongodb'
 import { envConfig } from '@/config/env.js'
 import User from '@/models/schemas/User.schema.js'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
+import Follow from '@/models/schemas/Follow.schema.js'
 
 const uri = envConfig.MONGO_URI
 
@@ -26,9 +27,20 @@ class DatabaseService {
   async createIndexes() {
     await Promise.all([
       this.users.createIndex({ email: 1 }, { unique: true }),
+      this.users.createIndex(
+        { username: 1 },
+        {
+          unique: true,
+          partialFilterExpression: { username: { $gt: '' } }
+        }
+      ),
       this.refreshTokens.createIndex(
         { created_at: 1 },
         { expireAfterSeconds: envConfig.EXPIRE_AFTER_SECONDS }
+      ),
+      this.follows.createIndex(
+        { follower_id: 1, following_id: 1 },
+        { unique: true }
       )
     ])
   }
@@ -43,6 +55,10 @@ class DatabaseService {
 
   get refreshTokens(): Collection<RefreshToken> {
     return this.db.collection(envConfig.REFRESH_TOKENS_COLLECTION)
+  }
+
+  get follows(): Collection<Follow> {
+    return this.db.collection(envConfig.FOLLOWS_COLLECTION)
   }
 }
 

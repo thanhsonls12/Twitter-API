@@ -99,6 +99,17 @@ export const registerValidator = validate(
           options: {
             strict: true,
             strictSeparator: true
+          },
+          errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
+        },
+        custom: {
+          options: (value) => {
+            const date = new Date(value)
+            const now = new Date()
+            if (date > now) {
+              throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_IN_PAST)
+            }
+            return true
           }
         }
       }
@@ -123,14 +134,20 @@ export const loginValidator = validate(
               email: value
             })
             if (user === null) {
-              throw new Error(AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD)
+              throw new ErrorWithStatus({
+                message: AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD,
+                status: httpStatus.UNAUTHORIZED
+              })
             }
             const isMatch = await comparePassword(
               req.body.password,
               user.password
             )
             if (!isMatch) {
-              throw new Error(AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD)
+              throw new ErrorWithStatus({
+                message: AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD,
+                status: httpStatus.UNAUTHORIZED
+              })
             }
             console.log('email_verify_token', user.email_verify_token)
             req.user = user
@@ -432,7 +449,6 @@ export const verifiedUserValidator = (
   next: NextFunction
 ) => {
   const { verify } = req.decoded_authorization as TokenPayload
-  console.log('verify: ', verify)
   if (verify !== UserVerifyStatus.Verified) {
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.USER_NOT_VERIFIED,
@@ -442,43 +458,52 @@ export const verifiedUserValidator = (
   next()
 }
 
+export const updateMeBodyValidator = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.BODY_MUST_BE_JSON_OBJECT,
+      status: httpStatus.BAD_REQUEST
+    })
+  }
+
+  const allowedFields = [
+    'name',
+    'date_of_birth',
+    'bio',
+    'location',
+    'website',
+    'username',
+    'avatar',
+    'cover_photo'
+  ]
+  const bodyKeys = Object.keys(req.body)
+
+  if (bodyKeys.length === 0) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.NO_FIELDS_TO_UPDATE,
+      status: httpStatus.BAD_REQUEST
+    })
+  }
+
+  const invalidFields = bodyKeys.filter((key) => !allowedFields.includes(key))
+
+  if (invalidFields.length > 0) {
+    throw new ErrorWithStatus({
+      message: `Invalid fields in request body: ${invalidFields.join(', ')}`,
+      status: httpStatus.BAD_REQUEST
+    })
+  }
+
+  next()
+}
+
 export const updateMeValidator = validate(
   checkSchema(
     {
-      body: {
-        custom: {
-          options: (_, { req }) => {
-            if (
-              !req.body ||
-              typeof req.body !== 'object' ||
-              Array.isArray(req.body)
-            ) {
-              throw new Error('Request body must be a JSON object')
-            }
-            const allowedFields = [
-              'name',
-              'date_of_birth',
-              'bio',
-              'location',
-              'website',
-              'username',
-              'avatar',
-              'cover_photo'
-            ]
-            const bodyKeys = Object.keys(req.body)
-            if (bodyKeys.length === 0) {
-              throw new Error('At least one field must be provided for update')
-            }
-            const invalidFields = bodyKeys.filter(
-              (key) => !allowedFields.includes(key)
-            )
-            if (invalidFields.length > 0) {
-              throw new Error(`Invalid fields: ${invalidFields.join(', ')}`)
-            }
-            return true
-          }
-        }
-      },
       name: {
         optional: true,
         isString: {
@@ -497,51 +522,60 @@ export const updateMeValidator = validate(
             strict: true,
             strictSeparator: true
           },
-          errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
+          errorMessage: USERS_MESSAGES.INVALID_DATE_OF_BIRTH_FORMAT
+        },
+        custom: {
+          options: (value) => {
+            const date = new Date(value)
+            const now = new Date()
+            if (date > now) {
+              throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_IN_PAST)
+            }
+            return true
+          }
         }
       },
       bio: {
         optional: true,
         isString: {
-          errorMessage: 'Bio must be a string'
+          errorMessage: USERS_MESSAGES.BIO_MUST_BE_STRING
         },
         isLength: {
           options: { max: 160 },
-          errorMessage: 'Bio must be at most 160 characters long'
+          errorMessage: USERS_MESSAGES.BIO_LENGTH
         },
         trim: true
       },
       location: {
         optional: true,
         isString: {
-          errorMessage: 'Location must be a string'
+          errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_STRING
         },
         isLength: {
           options: { max: 160 },
-          errorMessage: 'Location must be at most 160 characters long'
+          errorMessage: USERS_MESSAGES.LOCATION_LENGTH
         },
         trim: true
       },
       website: {
         optional: true,
         isURL: {
-          errorMessage: 'Website must be a valid URL'
+          errorMessage: USERS_MESSAGES.WEBSITE_MUST_BE_VALID_URL
         },
         trim: true
       },
       username: {
         optional: true,
         isString: {
-          errorMessage: 'Username must be a string'
+          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_STRING
         },
         isLength: {
           options: { min: 2, max: 50 },
-          errorMessage: 'Username must be between 2 and 50 characters long'
+          errorMessage: USERS_MESSAGES.USERNAME_LENGTH
         },
         matches: {
           options: /^[a-zA-Z0-9_]+$/,
-          errorMessage:
-            'Username can only contain letters, numbers, and underscores'
+          errorMessage: USERS_MESSAGES.USERNAME_INVALID_CHARACTERS
         },
         custom: {
           options: async (value: string, { req }) => {
@@ -553,7 +587,7 @@ export const updateMeValidator = validate(
               existingUser._id.toString() !==
                 (req as Request).decoded_authorization?.user_id
             ) {
-              throw new Error('Username already exists')
+              throw new Error(USERS_MESSAGES.USERNAME_ALREADY_EXISTS)
             }
             return true
           }
@@ -563,18 +597,68 @@ export const updateMeValidator = validate(
       avatar: {
         optional: true,
         isURL: {
-          errorMessage: 'Avatar must be a valid URL'
+          errorMessage: USERS_MESSAGES.AVATAR_MUST_BE_VALID_URL
         },
         trim: true
       },
       cover_photo: {
         optional: true,
         isURL: {
-          errorMessage: 'Cover photo must be a valid URL'
+          errorMessage: USERS_MESSAGES.COVER_PHOTO_MUST_BE_VALID_URL
         },
         trim: true
       }
     },
     ['body']
   )
+)
+
+export const getUserProfileValidator = validate(
+  checkSchema(
+    {
+      username: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.USERNAME_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_STRING
+        },
+        isLength: {
+          options: { min: 2, max: 50 },
+          errorMessage: USERS_MESSAGES.USERNAME_LENGTH
+        },
+        matches: {
+          options: /^[a-zA-Z0-9_]+$/,
+          errorMessage: USERS_MESSAGES.USERNAME_INVALID_CHARACTERS
+        },
+        trim: true
+      }
+    },
+    ['params']
+  )
+)
+
+export const followValidator = validate(
+  checkSchema({
+    user_id: {
+      notEmpty: {
+        errorMessage: USERS_MESSAGES.USERID_IS_REQUIRED
+      },
+      isMongoId: {
+        errorMessage: USERS_MESSAGES.USERID_INVALID
+      },
+      trim: true,
+      custom: {
+        options: async (value: string, { req }) => {
+          const { user_id } = req.decoded_authorization as TokenPayload
+          if (user_id === value) {
+            throw new ErrorWithStatus({
+              message: USERS_MESSAGES.CANNOT_FOLLOW_YOURSELF,
+              status: httpStatus.BAD_REQUEST
+            })
+          }
+        }
+      }
+    }
+  })
 )

@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import httpStatus from '@/constants/httpStatus.js'
-import { ErrorWithStatus } from '@/models/Errors.js'
+import { EntityError, ErrorWithStatus } from '@/models/Errors.js'
 import { NextFunction, Request, Response } from 'express'
-import { omit } from 'lodash-es'
 import { envConfig } from '@/config/env.js'
 export const defaultErrorHandler = (
   err: any,
@@ -11,7 +10,10 @@ export const defaultErrorHandler = (
   next: NextFunction
 ) => {
   if (err instanceof ErrorWithStatus) {
-    return res.status(err.status).json(omit(err, ['status', 'stack']))
+    return res.status(err.status).json({
+      message: err.message,
+      ...(err instanceof EntityError && { errors: err.errors })
+    })
   }
 
   if (envConfig.NODE_ENV === 'production') {
@@ -25,8 +27,9 @@ export const defaultErrorHandler = (
       enumerable: true
     })
   })
+  const { stack: _stack, ...errorInfo } = err
   res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
     message: err.message,
-    errorInfo: omit(err, ['stack'])
+    errorInfo
   })
 }

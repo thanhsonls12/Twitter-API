@@ -1,6 +1,8 @@
 import {
+  followController,
   forgotPasswordController,
   getMeController,
+  getUserProfileController,
   loginController,
   logoutController,
   refreshTokensController,
@@ -13,11 +15,14 @@ import {
 } from '@/controllers/users.controllers.js'
 import {
   accessTokenValidator,
+  followValidator,
   forgotPasswordValidator,
+  getUserProfileValidator,
   loginValidator,
   refreshTokenValidator,
   registerValidator,
   resetPasswordValidator,
+  updateMeBodyValidator,
   updateMeValidator,
   verifiedUserValidator,
   verifyEmailTokenValidator,
@@ -92,6 +97,14 @@ usersRouter.post(
   wrapRequestHandler(resetPasswordController)
 )
 
+usersRouter.post(
+  '/follow',
+  accessTokenValidator,
+  verifiedUserValidator,
+  followValidator,
+  wrapRequestHandler(followController)
+)
+
 /* -----GET-----*/
 usersRouter.get(
   '/me',
@@ -99,11 +112,18 @@ usersRouter.get(
   wrapRequestHandler(getMeController)
 )
 
+usersRouter.get(
+  '/:username',
+  getUserProfileValidator,
+  wrapRequestHandler(getUserProfileController)
+)
+
 /* -----PATCH-----*/
 usersRouter.patch(
   '/me',
   accessTokenValidator,
   verifiedUserValidator,
+  updateMeBodyValidator,
   updateMeValidator,
   wrapRequestHandler(updateMeController)
 )

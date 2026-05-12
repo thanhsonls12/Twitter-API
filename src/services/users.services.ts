@@ -14,6 +14,7 @@ import { ObjectId } from 'mongodb'
 import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
+import Follow from '@/models/schemas/Follow.schema.js'
 
 class UsersService {
   private signAccessToken({
@@ -54,6 +55,27 @@ class UsersService {
           envConfig.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
       }
     })
+  }
+
+  private buildUsernameFromEmail(email: string) {
+    const username = email
+      .split('@')[0]
+      .replace(/[^a-zA-Z0-9_]/g, '_')
+      .toLowerCase()
+
+    return username.length >= 2 ? username : `${username}_user`
+  }
+
+  private async generateUniqueUsername(email: string) {
+    const baseUsername = this.buildUsernameFromEmail(email)
+    let username = baseUsername
+
+    while (await databaseService.users.findOne({ username })) {
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+      username = `${baseUsername}_${randomSuffix}`
+    }
+
+    return username
   }
 
   private signEmailVerifyToken(user_id: string) {
@@ -102,10 +124,12 @@ class UsersService {
     const email_verify_token = await this.signEmailVerifyToken(
       user_id.toString()
     )
+    const username = await this.generateUniqueUsername(payload.email)
     const result = await databaseService.users.insertOne(
       new User({
         _id: user_id,
         ...payload,
+        username,
         email_verify_token,
         date_of_birth: new Date(payload.date_of_birth),
         password: await hashPassword(payload.password)
@@ -429,6 +453,65 @@ class UsersService {
       })
     }
     return user
+  }
+  async getUserProfile(username: string) {
+    const user = await databaseService.users.findOne(
+      {
+        username
+      },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0,
+          email: 0
+        }
+      }
+    )
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+    return user
+  }
+
+  async follow(user_id: string, target_user_id: string) {
+    const follower_id = new ObjectId(user_id)
+    const following_id = new ObjectId(target_user_id)
+
+    const targetUser = await databaseService.users.findOne({
+      _id: following_id
+    })
+    if (!targetUser) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+
+    const existingFollow = await databaseService.follows.findOne({
+      follower_id,
+      following_id
+    })
+
+    if (existingFollow) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.ALREADY_FOLLOWED,
+        status: httpStatus.BAD_REQUEST
+      })
+    }
+
+    const result = await databaseService.follows.insertOne(
+      new Follow({
+        _id: new ObjectId(),
+        follower_id,
+        following_id,
+        created_at: new Date()
+      })
+    )
+    return result
   }
 }
 

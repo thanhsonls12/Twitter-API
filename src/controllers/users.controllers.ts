@@ -1,4 +1,5 @@
 import {
+  FollowRequestBody,
   ForgotPasswordRequestBody,
   LoginRequestBody,
   RefreshTokensRequestBody,
@@ -12,6 +13,8 @@ import usersService from '@/services/users.services.js'
 import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+import { ErrorWithStatus } from '@/models/Errors.js'
+import httpStatus from '@/constants/httpStatus.js'
 
 export const registerController = async (
   req: Request<ParamsDictionary, any, RegisterRequestBody>,
@@ -31,8 +34,9 @@ export const loginController = async (
 ) => {
   const user = req.user
   if (!user || !user._id) {
-    return res.status(401).json({
-      message: AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD,
+      status: httpStatus.UNAUTHORIZED
     })
   }
   const user_id = user._id.toString()
@@ -84,8 +88,9 @@ export const verifyEmailTokenController = async (
   const user_id = req.decoded_email_verify_token?.user_id
   const refresh_token_user_id = req.decoded_refresh_token?.user_id
   if (!user_id) {
-    return res.status(401).json({
-      message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
     })
   }
   const result = await usersService.verifyEmailToken(
@@ -103,9 +108,10 @@ export const resendVerifyEmailController = async (
 ) => {
   const user_id = req.decoded_authorization?.user_id
   if (!user_id) {
-    return res
-      .status(401)
-      .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
+    })
   }
   const result = await usersService.resendVerifyEmail(user_id)
   return res.json(result)
@@ -127,8 +133,9 @@ export const verifyForgotPasswordTokenController = async (
   const { forgot_password_token } = req.body
   const user_id = req.decoded_forgot_password_token?.user_id
   if (!user_id) {
-    return res.status(401).json({
-      message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
     })
   }
   const result = await usersService.verifyForgotPasswordToken(
@@ -145,8 +152,9 @@ export const resetPasswordController = async (
   const { forgot_password_token, new_password } = req.body
   const user_id = req.decoded_forgot_password_token?.user_id
   if (!user_id) {
-    return res.status(401).json({
-      message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
     })
   }
   const result = await usersService.resetPassword(
@@ -160,9 +168,10 @@ export const resetPasswordController = async (
 export const getMeController = async (req: Request, res: Response) => {
   const user_id = req.decoded_authorization?.user_id
   if (!user_id) {
-    return res
-      .status(401)
-      .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
+    })
   }
   const result = await usersService.getMe(user_id)
   return res.json({
@@ -177,9 +186,10 @@ export const updateMeController = async (
 ) => {
   const user_id = req.decoded_authorization?.user_id
   if (!user_id) {
-    return res
-      .status(401)
-      .json({ message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID })
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
+    })
   }
   const updateData = req.body
   const result = await usersService.updateMe(user_id, updateData)
@@ -187,4 +197,29 @@ export const updateMeController = async (
     message: USERS_MESSAGES.USER_UPDATED_SUCCESSFULLY,
     data: result
   })
+}
+
+export const getUserProfileController = async (req: Request, res: Response) => {
+  const username = req.params.username as string
+  const result = await usersService.getUserProfile(username)
+  return res.json({
+    message: USERS_MESSAGES.USER_PROFILE_FETCHED_SUCCESSFULLY,
+    data: result
+  })
+}
+
+export const followController = async (
+  req: Request<ParamsDictionary, any, FollowRequestBody>,
+  res: Response
+) => {
+  const user_id = req.decoded_authorization?.user_id
+  if (!user_id) {
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
+    })
+  }
+  const { user_id: target_user_id } = req.body
+  const result = await usersService.follow(user_id, target_user_id)
+  return res.json(result)
 }
