@@ -45,7 +45,8 @@ export const USERS_MESSAGES = {
   USERID_LENGTH: 'User ID must be between 2 and 50 characters long',
   CANNOT_FOLLOW_YOURSELF: 'You cannot follow yourself',
   USERID_INVALID: 'User ID is invalid',
-  ALREADY_FOLLOWED: 'You already followed this user'
+  ALREADY_FOLLOWED: 'You already followed this user',
+  USER_NOT_FOLLOWED: 'You have not followed this user'
 } as const
 
 export const AUTH_MESSAGES = {

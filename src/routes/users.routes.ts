@@ -9,6 +9,7 @@ import {
   registerController,
   resendVerifyEmailController,
   resetPasswordController,
+  unFollowController,
   updateMeController,
   verifyEmailTokenController,
   verifyForgotPasswordTokenController
@@ -98,11 +99,19 @@ usersRouter.post(
 )
 
 usersRouter.post(
-  '/follow',
+  '/:user_id/follow',
   accessTokenValidator,
   verifiedUserValidator,
   followValidator,
   wrapRequestHandler(followController)
+)
+
+usersRouter.delete(
+  '/:user_id/follow',
+  accessTokenValidator,
+  verifiedUserValidator,
+  followValidator,
+  wrapRequestHandler(unFollowController)
 )
 
 /* -----GET-----*/

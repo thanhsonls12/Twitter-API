@@ -1,5 +1,4 @@
 import {
-  FollowRequestBody,
   ForgotPasswordRequestBody,
   LoginRequestBody,
   RefreshTokensRequestBody,
@@ -208,10 +207,7 @@ export const getUserProfileController = async (req: Request, res: Response) => {
   })
 }
 
-export const followController = async (
-  req: Request<ParamsDictionary, any, FollowRequestBody>,
-  res: Response
-) => {
+export const followController = async (req: Request, res: Response) => {
   const user_id = req.decoded_authorization?.user_id
   if (!user_id) {
     throw new ErrorWithStatus({
@@ -219,7 +215,20 @@ export const followController = async (
       status: httpStatus.UNAUTHORIZED
     })
   }
-  const { user_id: target_user_id } = req.body
+  const target_user_id = req.params.user_id as string
   const result = await usersService.follow(user_id, target_user_id)
+  return res.json(result)
+}
+
+export const unFollowController = async (req: Request, res: Response) => {
+  const user_id = req.decoded_authorization?.user_id
+  if (!user_id) {
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+      status: httpStatus.UNAUTHORIZED
+    })
+  }
+  const target_user_id = req.params.user_id as string
+  const result = await usersService.unFollow(user_id, target_user_id)
   return res.json(result)
 }

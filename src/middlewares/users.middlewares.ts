@@ -639,26 +639,29 @@ export const getUserProfileValidator = validate(
 )
 
 export const followValidator = validate(
-  checkSchema({
-    user_id: {
-      notEmpty: {
-        errorMessage: USERS_MESSAGES.USERID_IS_REQUIRED
-      },
-      isMongoId: {
-        errorMessage: USERS_MESSAGES.USERID_INVALID
-      },
-      trim: true,
-      custom: {
-        options: async (value: string, { req }) => {
-          const { user_id } = req.decoded_authorization as TokenPayload
-          if (user_id === value) {
-            throw new ErrorWithStatus({
-              message: USERS_MESSAGES.CANNOT_FOLLOW_YOURSELF,
-              status: httpStatus.BAD_REQUEST
-            })
+  checkSchema(
+    {
+      user_id: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.USERID_IS_REQUIRED
+        },
+        isMongoId: {
+          errorMessage: USERS_MESSAGES.USERID_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            const { user_id } = req.decoded_authorization as TokenPayload
+            if (user_id === value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.CANNOT_FOLLOW_YOURSELF,
+                status: httpStatus.BAD_REQUEST
+              })
+            }
           }
         }
       }
-    }
-  })
+    },
+    ['params']
+  )
 )

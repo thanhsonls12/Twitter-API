@@ -513,6 +513,21 @@ class UsersService {
     )
     return result
   }
+  async unFollow(user_id: string, target_user_id: string) {
+    const follower_id = new ObjectId(user_id)
+    const following_id = new ObjectId(target_user_id)
+    const result = await databaseService.follows.deleteOne({
+      follower_id,
+      following_id
+    })
+    if (result.deletedCount === 0) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOLLOWED,
+        status: httpStatus.BAD_REQUEST
+      })
+    }
+    return result
+  }
 }
 
 const usersService = new UsersService()
