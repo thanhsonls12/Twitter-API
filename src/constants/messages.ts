@@ -79,3 +79,11 @@ export const AUTH_MESSAGES = {
   CURRENT_PASSWORD_IS_INCORRECT: 'Current password is incorrect',
   GOOGLE_OAUTH_FAILED: 'Google OAuth failed'
 } as const
+
+export const MEDIAS_MESSAGES = {
+  ONLY_IMAGE_FILES_ARE_ALLOWED: 'Only image files are allowed',
+  NO_IMAGE_FILE_UPLOADED: 'No image file uploaded',
+  ONLY_VIDEO_FILES_ARE_ALLOWED: 'Only video files are allowed',
+  NO_VIDEO_FILE_UPLOADED: 'No video file uploaded',
+  INVALID_VIDEO_FILE_TYPE: 'Invalid video file type'
+} as const

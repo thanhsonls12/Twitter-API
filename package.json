@@ -17,6 +17,7 @@
   "type": "module",
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/file-type": "^10.6.0",
     "@types/formidable": "^3.5.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/minimist": "^1.2.5",

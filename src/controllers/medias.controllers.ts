@@ -1,4 +1,4 @@
-import { UPLOAD_DIR } from '@/constants/dir.js'
+import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '@/constants/dir.js'
 import httpStatus from '@/constants/httpStatus.js'
 import mediasServices from '@/services/medias.services.js'
 
@@ -15,12 +15,38 @@ export const uploadImageController = async (req: Request, res: Response) => {
 
 export const serveImageController = (req: Request, res: Response) => {
   const { filename } = req.params
-  return res.sendFile(path.resolve(UPLOAD_DIR, filename as string), (err) => {
-    if (err) {
-      console.error('Error sending file:', err)
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .json({ message: 'Image not found' })
+  return res.sendFile(
+    path.resolve(UPLOAD_IMAGE_DIR, filename as string),
+    (err) => {
+      if (err) {
+        console.error('Error sending file:', err)
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .json({ message: 'Image not found' })
+      }
     }
+  )
+}
+
+export const uploadVideoController = async (req: Request, res: Response) => {
+  const result = await mediasServices.handleUploadVideo(req)
+  return res.json({
+    message: 'Video uploaded successfully',
+    result
   })
+}
+
+export const serveVideoController = (req: Request, res: Response) => {
+  const { filename } = req.params
+  return res.sendFile(
+    path.resolve(UPLOAD_VIDEO_DIR, filename as string),
+    (err) => {
+      if (err) {
+        console.error('Error sending file:', err)
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .json({ message: 'Video not found' })
+      }
+    }
+  )
 }
