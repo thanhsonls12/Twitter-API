@@ -15,6 +15,8 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
+import { UserVerifyStatus } from '@/constants/enums.js'
+import { envConfig } from '@/config/env.js'
 
 export const registerController = async (
   req: Request<ParamsDictionary, any, RegisterRequestBody>,
@@ -32,7 +34,10 @@ export const loginController = async (
   req: Request<ParamsDictionary, any, LoginRequestBody>,
   res: Response
 ) => {
-  const user = req.user
+  const user = req.user as {
+    _id: { toString(): string }
+    verify?: UserVerifyStatus
+  }
   if (!user || !user._id) {
     throw new ErrorWithStatus({
       message: AUTH_MESSAGES.INVALID_EMAIL_OR_PASSWORD,
@@ -40,9 +45,10 @@ export const loginController = async (
     })
   }
   const user_id = user._id.toString()
+  const verify = user.verify ?? UserVerifyStatus.Unverified
   const { access_token, refresh_token } = await usersService.login({
     user_id,
-    verify: user.verify
+    verify
   })
   return res.json({
     message: AUTH_MESSAGES.LOGIN_SUCCESS,
@@ -252,4 +258,21 @@ export const changePasswordController = async (
     new_password
   )
   return res.json(result)
+}
+
+export const oauthGoogleController = async (req: Request, res: Response) => {
+  const user = req.user
+  if (!user?._id || !user.access_token || !user.refresh_token) {
+    throw new ErrorWithStatus({
+      message: AUTH_MESSAGES.GOOGLE_OAUTH_FAILED,
+      status: httpStatus.UNAUTHORIZED
+    })
+  }
+  const redirectUrl = new URL('/oauth/callback', envConfig.CLIENT_URL)
+
+  redirectUrl.searchParams.set('user_id', user._id.toString())
+  redirectUrl.searchParams.set('access_token', user.access_token)
+  redirectUrl.searchParams.set('refresh_token', user.refresh_token)
+
+  return res.redirect(redirectUrl.toString())
 }

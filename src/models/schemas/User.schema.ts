@@ -18,6 +18,8 @@ interface IUser {
   username?: string
   avatar?: string
   cover_photo?: string
+  google_id?: string
+  provider?: 'local' | 'google'
 }
 
 export default class User {
@@ -37,6 +39,8 @@ export default class User {
   username: string
   avatar: string
   cover_photo: string
+  google_id?: string
+  provider?: 'local' | 'google'
 
   constructor(user: IUser) {
     this._id = user._id
@@ -55,5 +59,7 @@ export default class User {
     this.username = user.username || ''
     this.avatar = user.avatar || ''
     this.cover_photo = user.cover_photo || ''
+    this.google_id = user.google_id || ''
+    this.provider = user.provider || 'local'
   }
 }

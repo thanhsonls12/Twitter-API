@@ -14,7 +14,11 @@ const requiredEnvVariables = [
   'FOLLOWS_COLLECTION',
   'EXPIRE_AFTER_SECONDS',
   'JWT_SECRET_FORGOT_PASSWORD_TOKEN',
-  'FORGOT_PASSWORD_TOKEN_EXPIRES_IN'
+  'FORGOT_PASSWORD_TOKEN_EXPIRES_IN',
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'GOOGLE_CALLBACK_URL',
+  'CLIENT_URL'
 ] as const
 
 for (const envName of requiredEnvVariables) {
@@ -50,5 +54,9 @@ export const envConfig = {
   JWT_SECRET_FORGOT_PASSWORD_TOKEN: process.env
     .JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
   FORGOT_PASSWORD_TOKEN_EXPIRES_IN: process.env
-    .FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string
+    .FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
+  CLIENT_URL: process.env.CLIENT_URL as string
 }

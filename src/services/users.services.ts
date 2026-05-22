@@ -568,6 +568,49 @@ class UsersService {
       message: USERS_MESSAGES.PASSWORD_CHANGED_SUCCESSFULLY
     }
   }
+  async oauthGoogle({
+    email,
+    name,
+    google_id
+  }: {
+    email: string
+    name: string
+    google_id: string
+  }) {
+    let user = await databaseService.users.findOne({ email })
+    if (!user) {
+      const user_id = new ObjectId()
+      const username = await this.generateUniqueUsername(email)
+
+      await databaseService.users.insertOne(
+        new User({
+          _id: user_id,
+          email,
+          name,
+          google_id,
+          provider: 'google',
+          username,
+          password: '',
+          verify: UserVerifyStatus.Verified
+        })
+      )
+      user = await databaseService.users.findOne({ _id: user_id })
+    }
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+    const user_id = user._id.toString()
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens(
+      { user_id, verify: user.verify }
+    )
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
+    )
+    return { user, access_token, refresh_token }
+  }
 }
 
 const usersService = new UsersService()

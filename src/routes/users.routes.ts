@@ -6,6 +6,7 @@ import {
   getUserProfileController,
   loginController,
   logoutController,
+  oauthGoogleController,
   refreshTokensController,
   registerController,
   resendVerifyEmailController,
@@ -36,6 +37,8 @@ import { wrapRequestHandler } from '@/utils/handler.js'
 import express from 'express'
 
 import { authLimiter } from '@/middlewares/rateLimit.middlewares.js'
+import passport from '@/config/passport.js'
+import { envConfig } from '@/config/env.js'
 
 const usersRouter = express.Router()
 
@@ -113,6 +116,23 @@ usersRouter.get(
   '/me',
   accessTokenValidator,
   wrapRequestHandler(getMeController)
+)
+
+usersRouter.get(
+  '/oauth/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false
+  })
+)
+
+usersRouter.get(
+  '/oauth/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: `${envConfig.CLIENT_URL}/login`
+  }),
+  wrapRequestHandler(oauthGoogleController)
 )
 
 usersRouter.get(

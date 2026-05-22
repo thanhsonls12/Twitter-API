@@ -76,5 +76,6 @@ export const AUTH_MESSAGES = {
   FORGOT_PASSWORD_TOKEN_IS_VALID: 'Forgot password token is valid',
   RESET_PASSWORD_SUCCESSFULLY: 'Password reset successfully',
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required',
-  CURRENT_PASSWORD_IS_INCORRECT: 'Current password is incorrect'
+  CURRENT_PASSWORD_IS_INCORRECT: 'Current password is incorrect',
+  GOOGLE_OAUTH_FAILED: 'Google OAuth failed'
 } as const
