@@ -49,7 +49,7 @@ export const envConfig = {
   REFRESH_TOKENS_COLLECTION: process.env.REFRESH_TOKENS_COLLECTION as string,
   FOLLOWS_COLLECTION: process.env.FOLLOWS_COLLECTION as string,
   EXPIRE_AFTER_SECONDS: expireAfterSeconds,
-  PORT: process.env.PORT ?? '3000',
+  PORT: process.env.PORT || '3000',
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   JWT_SECRET_FORGOT_PASSWORD_TOKEN: process.env
     .JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
@@ -58,5 +58,6 @@ export const envConfig = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
-  CLIENT_URL: process.env.CLIENT_URL as string
+  CLIENT_URL: process.env.CLIENT_URL as string,
+  BASE_URL: process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`
 }

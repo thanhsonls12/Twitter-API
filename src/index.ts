@@ -6,6 +6,11 @@ import databaseService from './services/database.services.js'
 import { defaultErrorHandler } from './middlewares/error.middlewares.js'
 import helmet from 'helmet'
 import passport from '@/config/passport.js'
+import mediasRouter from './routes/medias.routes.js'
+import { initFolder } from './utils/file.js'
+
+import staticRouter from './routes/static.routes.js'
+
 const app = express()
 const port = Number(envConfig.PORT)
 app.use(helmet())
@@ -14,9 +19,13 @@ app.use(express.json({ limit: '10kb' }))
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!')
 })
-app.use(passport.initialize())
-app.use('/users', usersRouter)
+initFolder()
 
+app.use(passport.initialize())
+
+app.use(staticRouter)
+app.use('/users', usersRouter)
+app.use('/medias', mediasRouter)
 async function startServer() {
   try {
     await databaseService.connect()
