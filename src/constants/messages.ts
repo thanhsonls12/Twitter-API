@@ -85,5 +85,8 @@ export const MEDIAS_MESSAGES = {
   NO_IMAGE_FILE_UPLOADED: 'No image file uploaded',
   ONLY_VIDEO_FILES_ARE_ALLOWED: 'Only video files are allowed',
   NO_VIDEO_FILE_UPLOADED: 'No video file uploaded',
-  INVALID_VIDEO_FILE_TYPE: 'Invalid video file type'
+  INVALID_VIDEO_FILE_TYPE: 'Invalid video file type',
+  VIDEO_UPLOADED_AND_QUEUED_FOR_HLS_CONVERSION:
+    'Video uploaded and queued for HLS conversion',
+  VIDEO_STATUS_NOT_FOUND: 'Video status not found'
 } as const

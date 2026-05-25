@@ -6,6 +6,7 @@ import { Request, Response } from 'express'
 import path from 'path'
 import fs from 'fs'
 import mime from 'mime-types'
+import { MEDIAS_MESSAGES } from '@/constants/messages.js'
 export const uploadImageController = async (req: Request, res: Response) => {
   const result = await mediasServices.handleUploadImage(req)
   return res.json({
@@ -61,4 +62,18 @@ export const serveVideoController = (req: Request, res: Response) => {
   res.writeHead(httpStatus.PARTIAL_CONTENT, headers)
   const videoStream = fs.createReadStream(videoPath, { start, end })
   videoStream.pipe(res)
+}
+
+export const uploadVideoHLSController = async (req: Request, res: Response) => {
+  const result = await mediasServices.handleUploadVideoHLS(req)
+  return res.json({
+    message: MEDIAS_MESSAGES.VIDEO_UPLOADED_AND_QUEUED_FOR_HLS_CONVERSION,
+    result
+  })
+}
+
+export const videoStatusController = async (req: Request, res: Response) => {
+  const { id } = req.params
+  const videoStatus = await mediasServices.getVideoStatus(id as string)
+  return res.json(videoStatus)
 }

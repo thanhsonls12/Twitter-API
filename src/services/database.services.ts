@@ -3,6 +3,7 @@ import { envConfig } from '@/config/env.js'
 import User from '@/models/schemas/User.schema.js'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
 import Follow from '@/models/schemas/Follow.schema.js'
+import VideoStatus from '@/models/schemas/VideoStatus.schema.js'
 
 const uri = envConfig.MONGO_URI
 
@@ -59,6 +60,10 @@ class DatabaseService {
 
   get follows(): Collection<Follow> {
     return this.db.collection(envConfig.FOLLOWS_COLLECTION)
+  }
+
+  get videoStatus(): Collection<VideoStatus> {
+    return this.db.collection(envConfig.VIDEO_STATUS_COLLECTION)
   }
 }
 

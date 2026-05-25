@@ -1,6 +1,6 @@
 import '@/config/env.js'
 import { envConfig } from '@/config/env.js'
-import express, { Request, Response } from 'express'
+import express from 'express'
 import usersRouter from './routes/users.routes.js'
 import databaseService from './services/database.services.js'
 import { defaultErrorHandler } from './middlewares/error.middlewares.js'
@@ -16,9 +16,6 @@ const port = Number(envConfig.PORT)
 app.use(helmet())
 app.use(express.json({ limit: '10kb' }))
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World!')
-})
 initFolder()
 
 app.use(passport.initialize())

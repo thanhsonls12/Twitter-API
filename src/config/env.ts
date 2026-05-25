@@ -18,7 +18,8 @@ const requiredEnvVariables = [
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
   'GOOGLE_CALLBACK_URL',
-  'CLIENT_URL'
+  'CLIENT_URL',
+  'VIDEO_STATUS_COLLECTION'
 ] as const
 
 for (const envName of requiredEnvVariables) {
@@ -59,5 +60,7 @@ export const envConfig = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
   CLIENT_URL: process.env.CLIENT_URL as string,
-  BASE_URL: process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`
+  VIDEO_STATUS_COLLECTION: process.env.VIDEO_STATUS_COLLECTION as string,
+  BASE_URL:
+    process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`
 }
