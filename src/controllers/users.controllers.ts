@@ -78,7 +78,8 @@ export const refreshTokensController = async (
   const user_id = req.decoded_refresh_token?.user_id
   const result = await usersService.refreshTokens({
     user_id: user_id as string,
-    refresh_token
+    refresh_token,
+    refresh_token_exp: req.decoded_refresh_token?.exp
   })
   return res.json({
     message: AUTH_MESSAGES.TOKENS_REFRESHED_SUCCESSFULLY,
@@ -93,6 +94,7 @@ export const verifyEmailTokenController = async (
   const { email_verify_token, refresh_token: old_refresh_token } = req.body
   const user_id = req.decoded_email_verify_token?.user_id
   const refresh_token_user_id = req.decoded_refresh_token?.user_id
+  const refresh_token_exp = req.decoded_refresh_token?.exp
   if (!user_id) {
     throw new ErrorWithStatus({
       message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
@@ -103,7 +105,8 @@ export const verifyEmailTokenController = async (
     user_id,
     email_verify_token,
     old_refresh_token,
-    refresh_token_user_id as string
+    refresh_token_user_id as string,
+    refresh_token_exp
   )
   return res.json(result)
 }

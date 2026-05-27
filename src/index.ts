@@ -10,6 +10,7 @@ import mediasRouter from './routes/medias.routes.js'
 import { initFolder } from './utils/file.js'
 
 import staticRouter from './routes/static.routes.js'
+import tweetsRouter from './routes/tweets.routes.js'
 
 const app = express()
 const port = Number(envConfig.PORT)
@@ -23,9 +24,10 @@ app.use(passport.initialize())
 app.use(staticRouter)
 app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
+app.use('/tweets', tweetsRouter)
 async function startServer() {
   try {
-    await databaseService.connect()
+    await databaseService.connect().then(() => databaseService.createIndexes())
     app.use(defaultErrorHandler)
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`)

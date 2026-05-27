@@ -90,3 +90,27 @@ export const MEDIAS_MESSAGES = {
     'Video uploaded and queued for HLS conversion',
   VIDEO_STATUS_NOT_FOUND: 'Video status not found'
 } as const
+
+export const TWEETS_MESSAGES = {
+  TYPE_REQUIRED: 'Type is required',
+  AUDIENCE_REQUIRED: 'Audience is required',
+  INVALID_TYPE: 'Invalid type',
+  INVALID_AUDIENCE: 'Invalid audience',
+  PARENT_ID_MUST_BE_A_VALID_TWEET_ID: 'Parent ID must be a valid tweet ID',
+  PARENT_ID_MUST_BE_NULL: 'Parent ID must be null for type Tweet',
+  CONTENT_MUST_BE_STRING: 'Content must be a string',
+  CONTENT_MUST_BE_LESS_THAN_280_CHARACTERS:
+    'Content must be less than 280 characters',
+  CONTENT_OR_MEDIA_REQUIRED: 'Content or media is required',
+  CONTENT_MUST_BE_EMPTY_STRING:
+    'Content must be an empty string for type Retweet',
+  HASHTAGS_MUST_BE_ARRAY: 'Hashtags must be an array',
+  HASHTAGS_MUST_BE_ARRAY_OF_STRINGS: 'Hashtags must be an array of strings',
+  MENTIONS_MUST_BE_ARRAY: 'Mentions must be an array',
+  MENTIONS_MUST_BE_ARRAY_OF_STRINGS: 'Mentions must be an array of strings',
+  MEDIAS_MUST_BE_ARRAY: 'Medias must be an array',
+  MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECTS:
+    'Medias must be an array of media objects',
+  PARENT_ID_NOT_EMPTY:
+    'Parent ID must not be empty for type Comment, QuoteTweet, or Retweet'
+} as const

@@ -38,22 +38,27 @@ class UsersService {
   }
   private signRefreshToken({
     user_id,
-    verify
+    verify,
+    exp
   }: {
     user_id: string
     verify: UserVerifyStatus
+    exp?: number
   }) {
     return signToken({
       payload: {
         user_id,
         token_type: TokenType.RefreshToken,
-        verify
+        verify,
+        ...(exp ? { exp } : {})
       },
       secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN,
-      options: {
-        expiresIn:
-          envConfig.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
-      }
+      options: exp
+        ? {}
+        : {
+            expiresIn:
+              envConfig.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
+          }
     })
   }
 
@@ -108,14 +113,16 @@ class UsersService {
 
   private signAccessAndRefreshTokens({
     user_id,
-    verify
+    verify,
+    exp
   }: {
     user_id: string
     verify: UserVerifyStatus
+    exp?: number
   }) {
     return Promise.all([
       this.signAccessToken({ user_id, verify }),
-      this.signRefreshToken({ user_id, verify })
+      this.signRefreshToken({ user_id, verify, exp })
     ])
   }
 
@@ -188,10 +195,12 @@ class UsersService {
   }
   async refreshTokens({
     user_id,
-    refresh_token
+    refresh_token,
+    refresh_token_exp
   }: {
     user_id: string
     refresh_token: string
+    refresh_token_exp?: number
   }) {
     const user = await databaseService.users.findOne({
       _id: new ObjectId(user_id)
@@ -203,7 +212,11 @@ class UsersService {
       })
     }
     const [new_access_token, new_refresh_token] =
-      await this.signAccessAndRefreshTokens({ user_id, verify: user.verify })
+      await this.signAccessAndRefreshTokens({
+        user_id,
+        verify: user.verify,
+        exp: refresh_token_exp
+      })
     const updatedRefreshToken =
       await databaseService.refreshTokens.findOneAndUpdate(
         {
@@ -226,7 +239,8 @@ class UsersService {
     user_id: string,
     email_verify_token: string,
     old_refresh_token: string,
-    refresh_token_user_id: string
+    refresh_token_user_id: string,
+    refresh_token_exp?: number
   ) {
     if (user_id !== refresh_token_user_id) {
       throw new ErrorWithStatus({
@@ -270,7 +284,8 @@ class UsersService {
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens(
       {
         user_id,
-        verify: UserVerifyStatus.Verified
+        verify: UserVerifyStatus.Verified,
+        exp: refresh_token_exp
       }
     )
     const updatedRefreshToken =

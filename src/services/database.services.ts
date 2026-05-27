@@ -19,13 +19,31 @@ class DatabaseService {
   async connect() {
     await this.client.connect()
     await this.db.command({ ping: 1 })
-    await this.createIndexes()
+
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
     )
   }
 
   async createIndexes() {
+    const existsUsers = await this.users.indexExists(['email_1', 'username_1'])
+    const existsRefreshTokens = await this.refreshTokens.indexExists([
+      'token_1',
+      'created_at_1'
+    ])
+    const existsFollows = await this.follows.indexExists([
+      'follower_id_1_following_id_1'
+    ])
+    const existsVideoStatus = await this.videoStatus.indexExists(['name_1'])
+    if (
+      existsUsers &&
+      existsRefreshTokens &&
+      existsFollows &&
+      existsVideoStatus
+    ) {
+      return
+    }
+
     await Promise.all([
       this.users.createIndex({ email: 1 }, { unique: true }),
       this.users.createIndex(
@@ -35,6 +53,7 @@ class DatabaseService {
           partialFilterExpression: { username: { $gt: '' } }
         }
       ),
+      this.refreshTokens.createIndex({ token: 1 }, { unique: true }),
       this.refreshTokens.createIndex(
         { created_at: 1 },
         { expireAfterSeconds: envConfig.EXPIRE_AFTER_SECONDS }
@@ -42,7 +61,8 @@ class DatabaseService {
       this.follows.createIndex(
         { follower_id: 1, following_id: 1 },
         { unique: true }
-      )
+      ),
+      this.videoStatus.createIndex({ name: 1 }, { unique: true })
     ])
   }
 
