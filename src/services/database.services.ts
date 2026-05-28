@@ -6,6 +6,7 @@ import Follow from '@/models/schemas/Follow.schema.js'
 import VideoStatus from '@/models/schemas/VideoStatus.schema.js'
 import Tweet from '@/models/schemas/Tweet.schema.js'
 import Hashtag from '@/models/schemas/Hashtag.schema.js'
+import { Bookmark } from '@/models/schemas/Bookmark.schema.js'
 
 const uri = envConfig.MONGO_URI
 
@@ -38,12 +39,16 @@ class DatabaseService {
     ])
     const existsVideoStatus = await this.videoStatus.indexExists(['name_1'])
     const existsHashtags = await this.hashtags.indexExists(['name_1'])
+    const existsBookmarks = await this.bookmarks.indexExists([
+      'user_id_1_tweet_id_1'
+    ])
     if (
       existsUsers &&
       existsRefreshTokens &&
       existsFollows &&
       existsVideoStatus &&
-      existsHashtags
+      existsHashtags &&
+      existsBookmarks
     ) {
       return
     }
@@ -67,7 +72,8 @@ class DatabaseService {
         { unique: true }
       ),
       this.videoStatus.createIndex({ name: 1 }, { unique: true }),
-      this.hashtags.createIndex({ name: 1 }, { unique: true })
+      this.hashtags.createIndex({ name: 1 }, { unique: true }),
+      this.bookmarks.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true })
     ])
   }
 
@@ -97,6 +103,10 @@ class DatabaseService {
 
   get hashtags(): Collection<Hashtag> {
     return this.db.collection(envConfig.HASHTAGS_COLLECTION)
+  }
+
+  get bookmarks(): Collection<Bookmark> {
+    return this.db.collection(envConfig.BOOKMARKS_COLLECTION)
   }
 }
 

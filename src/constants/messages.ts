@@ -114,3 +114,12 @@ export const TWEETS_MESSAGES = {
   PARENT_ID_NOT_EMPTY:
     'Parent ID must not be empty for type Comment, QuoteTweet, or Retweet'
 } as const
+
+export const BOOKMARKS_MESSAGES = {
+  BOOKMARK_CREATED: 'Bookmark created successfully',
+  BOOKMARK_DELETED: 'Bookmark deleted successfully',
+  BOOKMARK_NOT_FOUND: 'Bookmark not found',
+  TWEET_ID_REQUIRED: 'Tweet ID is required',
+  TWEET_ID_INVALID: 'Tweet ID is invalid',
+  TWEET_NOT_FOUND: 'Tweet not found'
+} as const
