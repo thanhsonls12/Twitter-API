@@ -5,6 +5,7 @@ import { numberEnumToArray } from '@/utils/commons.js'
 import { validate } from '@/utils/validation.js'
 import { checkSchema } from 'express-validator'
 import isEmpty from 'lodash/isEmpty.js'
+import { ObjectId } from 'mongodb'
 
 const tweetTypes = numberEnumToArray(TweetType)
 
@@ -19,6 +20,7 @@ export const createTweetValidator = validate(
         notEmpty: {
           errorMessage: TWEETS_MESSAGES.TYPE_REQUIRED
         },
+        isInt: true,
         isIn: {
           options: [tweetTypes],
           errorMessage: TWEETS_MESSAGES.INVALID_TYPE
@@ -28,12 +30,14 @@ export const createTweetValidator = validate(
         notEmpty: {
           errorMessage: TWEETS_MESSAGES.AUDIENCE_REQUIRED
         },
+        isInt: true,
         isIn: {
           options: [tweetAudiences],
           errorMessage: TWEETS_MESSAGES.INVALID_AUDIENCE
         }
       },
       parent_id: {
+        optional: { options: { nullable: true } },
         custom: {
           options: (value, { req }) => {
             const type = req.body.type as TweetType
@@ -42,12 +46,13 @@ export const createTweetValidator = validate(
                 TweetType.Comment,
                 TweetType.QuoteTweet,
                 TweetType.Retweet
-              ].includes(type) &&
-              typeof value !== 'string'
+              ].includes(type)
             ) {
-              throw new Error(
-                TWEETS_MESSAGES.PARENT_ID_MUST_BE_A_VALID_TWEET_ID
-              )
+              if (typeof value !== 'string' || !ObjectId.isValid(value)) {
+                throw new Error(
+                  TWEETS_MESSAGES.PARENT_ID_MUST_BE_A_VALID_TWEET_ID
+                )
+              }
             }
             if (type === TweetType.Tweet && value !== null && value !== undefined) {
               throw new Error(TWEETS_MESSAGES.PARENT_ID_MUST_BE_NULL)
@@ -57,6 +62,7 @@ export const createTweetValidator = validate(
         }
       },
       content: {
+        optional: { options: { nullable: true } },
         isString: {
           errorMessage: TWEETS_MESSAGES.CONTENT_MUST_BE_STRING
         },
@@ -98,6 +104,7 @@ export const createTweetValidator = validate(
         },
         custom: {
           options: (value) => {
+            if (!Array.isArray(value)) return true
             if (!value.every((hashtag: any) => typeof hashtag === 'string')) {
               throw new Error(TWEETS_MESSAGES.HASHTAGS_MUST_BE_ARRAY_OF_STRINGS)
             }
@@ -112,7 +119,8 @@ export const createTweetValidator = validate(
         },
         custom: {
           options: (value) => {
-            if (!value.every((mention: any) => typeof mention === 'string')) {
+            if (!Array.isArray(value)) return true
+            if (!value.every((mention: any) => typeof mention === 'string' && ObjectId.isValid(mention))) {
               throw new Error(TWEETS_MESSAGES.MENTIONS_MUST_BE_ARRAY_OF_STRINGS)
             }
             return true
@@ -126,6 +134,7 @@ export const createTweetValidator = validate(
         },
         custom: {
           options: (value) => {
+            if (!Array.isArray(value)) return true
             if (
               value.some((media: Media) => {
                 return (

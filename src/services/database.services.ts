@@ -4,6 +4,8 @@ import User from '@/models/schemas/User.schema.js'
 import RefreshToken from '@/models/schemas/RefreshToken.schema.js'
 import Follow from '@/models/schemas/Follow.schema.js'
 import VideoStatus from '@/models/schemas/VideoStatus.schema.js'
+import Tweet from '@/models/schemas/Tweet.schema.js'
+import Hashtag from '@/models/schemas/Hashtag.schema.js'
 
 const uri = envConfig.MONGO_URI
 
@@ -35,11 +37,13 @@ class DatabaseService {
       'follower_id_1_following_id_1'
     ])
     const existsVideoStatus = await this.videoStatus.indexExists(['name_1'])
+    const existsHashtags = await this.hashtags.indexExists(['name_1'])
     if (
       existsUsers &&
       existsRefreshTokens &&
       existsFollows &&
-      existsVideoStatus
+      existsVideoStatus &&
+      existsHashtags
     ) {
       return
     }
@@ -62,7 +66,8 @@ class DatabaseService {
         { follower_id: 1, following_id: 1 },
         { unique: true }
       ),
-      this.videoStatus.createIndex({ name: 1 }, { unique: true })
+      this.videoStatus.createIndex({ name: 1 }, { unique: true }),
+      this.hashtags.createIndex({ name: 1 }, { unique: true })
     ])
   }
 
@@ -84,6 +89,14 @@ class DatabaseService {
 
   get videoStatus(): Collection<VideoStatus> {
     return this.db.collection(envConfig.VIDEO_STATUS_COLLECTION)
+  }
+
+  get tweets(): Collection<Tweet> {
+    return this.db.collection(envConfig.TWEETS_COLLECTION)
+  }
+
+  get hashtags(): Collection<Hashtag> {
+    return this.db.collection(envConfig.HASHTAGS_COLLECTION)
   }
 }
 
