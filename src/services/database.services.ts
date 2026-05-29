@@ -7,6 +7,7 @@ import VideoStatus from '@/models/schemas/VideoStatus.schema.js'
 import Tweet from '@/models/schemas/Tweet.schema.js'
 import Hashtag from '@/models/schemas/Hashtag.schema.js'
 import { Bookmark } from '@/models/schemas/Bookmark.schema.js'
+import { Like } from '@/models/schemas/Like.schema.js'
 
 const uri = envConfig.MONGO_URI
 
@@ -42,13 +43,15 @@ class DatabaseService {
     const existsBookmarks = await this.bookmarks.indexExists([
       'user_id_1_tweet_id_1'
     ])
+    const existsLikes = await this.likes.indexExists(['user_id_1_tweet_id_1'])
     if (
       existsUsers &&
       existsRefreshTokens &&
       existsFollows &&
       existsVideoStatus &&
       existsHashtags &&
-      existsBookmarks
+      existsBookmarks &&
+      existsLikes
     ) {
       return
     }
@@ -73,7 +76,8 @@ class DatabaseService {
       ),
       this.videoStatus.createIndex({ name: 1 }, { unique: true }),
       this.hashtags.createIndex({ name: 1 }, { unique: true }),
-      this.bookmarks.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true })
+      this.bookmarks.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true }),
+      this.likes.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true })
     ])
   }
 
@@ -107,6 +111,10 @@ class DatabaseService {
 
   get bookmarks(): Collection<Bookmark> {
     return this.db.collection(envConfig.BOOKMARKS_COLLECTION)
+  }
+
+  get likes(): Collection<Like> {
+    return this.db.collection(envConfig.LIKES_COLLECTION)
   }
 }
 

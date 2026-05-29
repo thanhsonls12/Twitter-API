@@ -115,6 +115,15 @@ export const TWEETS_MESSAGES = {
     'Parent ID must not be empty for type Comment, QuoteTweet, or Retweet'
 } as const
 
+export const LIKES_MESSAGES = {
+  LIKE_CREATED: 'Like created successfully',
+  LIKE_DELETED: 'Unlike successfully',
+  LIKE_NOT_FOUND: 'Like not found',
+  TWEET_ID_REQUIRED: 'Tweet ID is required',
+  TWEET_ID_INVALID: 'Tweet ID is invalid',
+  TWEET_NOT_FOUND: 'Tweet not found'
+} as const
+
 export const BOOKMARKS_MESSAGES = {
   BOOKMARK_CREATED: 'Bookmark created successfully',
   BOOKMARK_DELETED: 'Bookmark deleted successfully',

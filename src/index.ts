@@ -12,6 +12,7 @@ import { initFolder } from './utils/file.js'
 import staticRouter from './routes/static.routes.js'
 import tweetsRouter from './routes/tweets.routes.js'
 import bookmarksRouter from './routes/bookmarks.routes.js'
+import likesRouter from './routes/likes.routes.js'
 
 const app = express()
 const port = Number(envConfig.PORT)
@@ -27,6 +28,7 @@ app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
 app.use('/tweets', tweetsRouter)
 app.use('/bookmarks', bookmarksRouter)
+app.use('/likes', likesRouter)
 async function startServer() {
   try {
     await databaseService.connect().then(() => databaseService.createIndexes())

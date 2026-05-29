@@ -24,7 +24,7 @@ export const registerController = async (
 ) => {
   const result = await usersService.register(req.body)
 
-  return res.status(201).json({
+  return res.status(httpStatus.CREATED).json({
     message: AUTH_MESSAGES.USER_REGISTERED_SUCCESSFULLY,
     data: result
   })

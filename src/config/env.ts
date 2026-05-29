@@ -22,7 +22,8 @@ const requiredEnvVariables = [
   'VIDEO_STATUS_COLLECTION',
   'TWEETS_COLLECTION',
   'HASHTAGS_COLLECTION',
-  'BOOKMARKS_COLLECTION'
+  'BOOKMARKS_COLLECTION',
+  'LIKES_COLLECTION'
 ] as const
 
 for (const envName of requiredEnvVariables) {
@@ -67,6 +68,7 @@ export const envConfig = {
   TWEETS_COLLECTION: process.env.TWEETS_COLLECTION as string,
   HASHTAGS_COLLECTION: process.env.HASHTAGS_COLLECTION as string,
   BOOKMARKS_COLLECTION: process.env.BOOKMARKS_COLLECTION as string,
+  LIKES_COLLECTION: process.env.LIKES_COLLECTION as string,
   BASE_URL:
     process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`
 }

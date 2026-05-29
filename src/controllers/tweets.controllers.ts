@@ -1,4 +1,5 @@
 import { TokenPayload } from '@/@types/express.js'
+import httpStatus from '@/constants/httpStatus.js'
 import { TweetRequestBody } from '@/models/requests/Tweet.requests.js'
 
 import tweetService from '@/services/tweets.services.js'
@@ -10,5 +11,7 @@ export const createTweetController = async (
 ) => {
   const { user_id } = req.decoded_authorization as TokenPayload
   const result = await tweetService.createTweet(req.body, user_id)
-  return res.status(201).json({ message: 'Tweet created successfully', result })
+  return res
+    .status(httpStatus.CREATED)
+    .json({ message: 'Tweet created successfully', result })
 }
