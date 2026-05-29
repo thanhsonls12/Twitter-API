@@ -118,7 +118,8 @@ export const TWEETS_MESSAGES = {
   TWEET_NOT_FOUND: 'Tweet not found',
   TWEET_FETCHED: 'Tweet fetched successfully',
   TWEET_CREATED: 'Tweet created successfully',
-  TWEET_DELETED: 'Tweet deleted successfully'
+  TWEET_DELETED: 'Tweet deleted successfully',
+  IS_NOT_PUBLIC: 'The tweet is not public'
 } as const
 
 export const LIKES_MESSAGES = {
@@ -139,4 +140,15 @@ export const BOOKMARKS_MESSAGES = {
   TWEET_ID_REQUIRED: 'Tweet ID is required',
   TWEET_ID_INVALID: 'Tweet ID is invalid',
   TWEET_NOT_FOUND: 'Tweet not found'
+} as const
+
+export const TWITTER_CIRCLE_MESSAGES = {
+  USER_ID_REQUIRED: 'User ID is required',
+  USER_ID_INVALID: 'User ID is invalid',
+  CANNOT_ADD_YOURSELF_TO_CIRCLE:
+    'You cannot add yourself to your Twitter Circle',
+  USER_ADDED_TO_CIRCLE: 'User added to Twitter Circle',
+  USER_REMOVED_FROM_CIRCLE: 'User removed from Twitter Circle',
+  CIRCLE_LIMIT_REACHED: 'Twitter Circle can have a maximum of 150 members',
+  USER_NOT_FOUND: 'User not found'
 } as const

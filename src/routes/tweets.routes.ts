@@ -4,12 +4,14 @@ import {
   getTweetController
 } from '@/controllers/tweets.controllers.js'
 import {
+  audienceValidator,
   createTweetValidator,
   deleteTweetValidator,
   getTweetValidator
 } from '@/middlewares/tweets.middlewares.js'
 import {
   accessTokenValidator,
+  isUserLoggedInValidator,
   verifiedUserValidator
 } from '@/middlewares/users.middlewares.js'
 import { wrapRequestHandler } from '@/utils/handler.js'
@@ -19,9 +21,10 @@ const tweetsRouter = experss.Router()
 
 tweetsRouter.get(
   '/:tweet_id',
-  accessTokenValidator,
-  verifiedUserValidator,
+  isUserLoggedInValidator(accessTokenValidator),
+  isUserLoggedInValidator(verifiedUserValidator),
   getTweetValidator,
+  audienceValidator,
   wrapRequestHandler(getTweetController)
 )
 

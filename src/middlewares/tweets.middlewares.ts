@@ -1,12 +1,16 @@
 import { MediaType, TweetAudience, TweetType } from '@/constants/enums.js'
-import { TWEETS_MESSAGES } from '@/constants/messages.js'
+import { AUTH_MESSAGES, TWEETS_MESSAGES } from '@/constants/messages.js'
 import { Media } from '@/models/Other.js'
 import { numberEnumToArray } from '@/utils/commons.js'
+import { wrapRequestHandler } from '@/utils/handler.js'
 import { validate } from '@/utils/validation.js'
 import { checkSchema } from 'express-validator'
 import isEmpty from 'lodash/isEmpty.js'
 import { ObjectId } from 'mongodb'
-
+import { NextFunction, Request, Response } from 'express'
+import databaseService from '@/services/database.services.js'
+import { ErrorWithStatus } from '@/models/Errors.js'
+import httpStatus from '@/constants/httpStatus.js'
 const tweetTypes = numberEnumToArray(TweetType)
 
 const tweetAudiences = numberEnumToArray(TweetAudience)
@@ -206,4 +210,50 @@ export const deleteTweetValidator = validate(
     },
     ['params']
   )
+)
+
+export const audienceValidator = wrapRequestHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { tweet_id } = req.params
+    const tweet = await databaseService.tweets.findOne({
+      _id: new ObjectId(tweet_id as string)
+    })
+    if (!tweet) {
+      throw new ErrorWithStatus({
+        message: TWEETS_MESSAGES.TWEET_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
+    }
+    if (tweet.audience === TweetAudience.Everyone) {
+      return next()
+    }
+    const { user_id } = req.decoded_authorization as { user_id: string }
+    if (!user_id) {
+      throw new ErrorWithStatus({
+        message: AUTH_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+        status: httpStatus.UNAUTHORIZED
+      })
+    }
+    if (tweet.user_id.equals(new ObjectId(user_id))) {
+      return next()
+    }
+    const author = await databaseService.users.findOne(
+      {
+        _id: tweet.user_id
+      },
+      {
+        projection: { twitter_circle: 1 }
+      }
+    )
+    const isInTwitterCircle = author?.twitter_circle.some((id: ObjectId) =>
+      id.equals(new ObjectId(user_id))
+    )
+    if (!isInTwitterCircle) {
+      throw new ErrorWithStatus({
+        message: TWEETS_MESSAGES.IS_NOT_PUBLIC,
+        status: httpStatus.FORBIDDEN
+      })
+    }
+    next()
+  }
 )

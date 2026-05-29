@@ -13,6 +13,7 @@ import staticRouter from './routes/static.routes.js'
 import tweetsRouter from './routes/tweets.routes.js'
 import bookmarksRouter from './routes/bookmarks.routes.js'
 import likesRouter from './routes/likes.routes.js'
+import twitterCircleRouter from './routes/twitterCircle.routes.js'
 
 const app = express()
 const port = Number(envConfig.PORT)
@@ -29,6 +30,7 @@ app.use('/medias', mediasRouter)
 app.use('/tweets', tweetsRouter)
 app.use('/bookmarks', bookmarksRouter)
 app.use('/likes', likesRouter)
+app.use('/twitter-circle', twitterCircleRouter)
 async function startServer() {
   try {
     await databaseService.connect().then(() => databaseService.createIndexes())
