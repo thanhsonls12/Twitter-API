@@ -119,6 +119,7 @@ export const LIKES_MESSAGES = {
   LIKE_CREATED: 'Like created successfully',
   LIKE_DELETED: 'Unlike successfully',
   LIKE_NOT_FOUND: 'Like not found',
+  LIKES_FETCHED: 'Likes fetched successfully',
   TWEET_ID_REQUIRED: 'Tweet ID is required',
   TWEET_ID_INVALID: 'Tweet ID is invalid',
   TWEET_NOT_FOUND: 'Tweet not found'
@@ -128,6 +129,7 @@ export const BOOKMARKS_MESSAGES = {
   BOOKMARK_CREATED: 'Bookmark created successfully',
   BOOKMARK_DELETED: 'Bookmark deleted successfully',
   BOOKMARK_NOT_FOUND: 'Bookmark not found',
+  BOOKMARKS_FETCHED: 'Bookmarks fetched successfully',
   TWEET_ID_REQUIRED: 'Tweet ID is required',
   TWEET_ID_INVALID: 'Tweet ID is invalid',
   TWEET_NOT_FOUND: 'Tweet not found'

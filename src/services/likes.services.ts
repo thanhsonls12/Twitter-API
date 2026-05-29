@@ -37,6 +37,13 @@ class LikesService {
     })
     return result
   }
+
+  async getTweetLikes(user_id: string) {
+    const result = await databaseService.likes.find({
+      user_id: new ObjectId(user_id)
+    }).toArray()
+    return result
+  }
 }
 
 const likesService = new LikesService()

@@ -1,9 +1,11 @@
 import { TokenPayload } from '@/@types/express.js'
 import httpStatus from '@/constants/httpStatus.js'
+import { LIKES_MESSAGES } from '@/constants/messages.js'
 import { LikeTweetRequestBody } from '@/models/requests/Like.requests.js'
 import likesService from '@/services/likes.services.js'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+
 export const likeTweetController = async (
   req: Request<ParamsDictionary, any, LikeTweetRequestBody>,
   res: Response
@@ -13,7 +15,7 @@ export const likeTweetController = async (
   const result = await likesService.likeTweet(user_id, tweet_id)
   return res
     .status(httpStatus.CREATED)
-    .json({ message: 'Tweet liked successfully', result })
+    .json({ message: LIKES_MESSAGES.LIKE_CREATED, result })
 }
 
 export const unlikeTweetController = async (
@@ -25,5 +27,13 @@ export const unlikeTweetController = async (
   const result = await likesService.unlikeTweet(user_id, tweet_id as string)
   return res
     .status(httpStatus.OK)
-    .json({ message: 'Tweet unliked successfully', result })
+    .json({ message: LIKES_MESSAGES.LIKE_DELETED, result })
+}
+
+export const getTweetLikesController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const result = await likesService.getTweetLikes(user_id)
+  return res
+    .status(httpStatus.OK)
+    .json({ message: LIKES_MESSAGES.LIKES_FETCHED, result })
 }

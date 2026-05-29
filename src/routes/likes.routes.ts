@@ -1,4 +1,5 @@
 import {
+  getTweetLikesController,
   likeTweetController,
   unlikeTweetController
 } from '@/controllers/likes.controllers.js'
@@ -14,6 +15,13 @@ import { wrapRequestHandler } from '@/utils/handler.js'
 import express from 'express'
 
 const likesRouter = express.Router()
+
+likesRouter.get(
+  '/',
+  accessTokenValidator,
+  verifiedUserValidator,
+  wrapRequestHandler(getTweetLikesController)
+)
 
 likesRouter.post(
   '/',

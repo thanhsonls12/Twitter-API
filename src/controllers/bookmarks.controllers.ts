@@ -5,6 +5,14 @@ import { BOOKMARKS_MESSAGES } from '@/constants/messages.js'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import httpStatus from '@/constants/httpStatus.js'
+export const getBookmarksController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const result = await bookmarkService.getBookmarks(user_id)
+  return res
+    .status(httpStatus.OK)
+    .json({ message: BOOKMARKS_MESSAGES.BOOKMARKS_FETCHED, result })
+}
+
 export const bookmarkTweetController = async (
   req: Request<ParamsDictionary, any, BookmarkTweetRequest>,
   res: Response

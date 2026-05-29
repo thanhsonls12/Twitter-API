@@ -1,3 +1,4 @@
+import { LIKES_MESSAGES } from '@/constants/messages.js'
 import databaseService from '@/services/database.services.js'
 import { validate } from '@/utils/validation.js'
 import { checkSchema } from 'express-validator'
@@ -8,18 +9,18 @@ export const likeTweetValidator = validate(
     {
       tweet_id: {
         notEmpty: {
-          errorMessage: 'Tweet ID is required'
+          errorMessage: LIKES_MESSAGES.TWEET_ID_REQUIRED
         },
         custom: {
           options: async (value) => {
             if (!ObjectId.isValid(value)) {
-              throw new Error('Invalid Tweet ID')
+              throw new Error(LIKES_MESSAGES.TWEET_ID_INVALID)
             }
             const tweet = await databaseService.tweets.findOne({
               _id: new ObjectId(value)
             })
             if (!tweet) {
-              throw new Error('Tweet not found')
+              throw new Error(LIKES_MESSAGES.TWEET_NOT_FOUND)
             }
             return true
           }
@@ -35,12 +36,12 @@ export const unlikeTweetValidator = validate(
     {
       tweet_id: {
         notEmpty: {
-          errorMessage: 'Tweet ID is required'
+          errorMessage: LIKES_MESSAGES.TWEET_ID_REQUIRED
         },
         custom: {
           options: async (value) => {
             if (!ObjectId.isValid(value)) {
-              throw new Error('Invalid Tweet ID')
+              throw new Error(LIKES_MESSAGES.TWEET_ID_INVALID)
             }
             return true
           }

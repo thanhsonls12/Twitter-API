@@ -25,6 +25,13 @@ class BookmarkService {
     return result
   }
 
+  async getBookmarks(user_id: string) {
+    const result = await databaseService.bookmarks
+      .find({ user_id: new ObjectId(user_id) })
+      .toArray()
+    return result
+  }
+
   async unbookmarkTweet(user_id: string, tweet_id: string) {
     const bookmark = await databaseService.bookmarks.findOne({
       user_id: new ObjectId(user_id),

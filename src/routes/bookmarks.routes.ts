@@ -1,5 +1,6 @@
 import {
   bookmarkTweetController,
+  getBookmarksController,
   unbookmarkTweetController
 } from '@/controllers/bookmarks.controllers.js'
 import {
@@ -14,6 +15,13 @@ import { wrapRequestHandler } from '@/utils/handler.js'
 import express from 'express'
 
 const bookmarksRouter = express.Router()
+
+bookmarksRouter.get(
+  '/',
+  accessTokenValidator,
+  verifiedUserValidator,
+  wrapRequestHandler(getBookmarksController)
+)
 
 bookmarksRouter.post(
   '/',
