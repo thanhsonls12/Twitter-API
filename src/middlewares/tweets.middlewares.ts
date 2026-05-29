@@ -54,7 +54,11 @@ export const createTweetValidator = validate(
                 )
               }
             }
-            if (type === TweetType.Tweet && value !== null && value !== undefined) {
+            if (
+              type === TweetType.Tweet &&
+              value !== null &&
+              value !== undefined
+            ) {
               throw new Error(TWEETS_MESSAGES.PARENT_ID_MUST_BE_NULL)
             }
             return true
@@ -120,7 +124,12 @@ export const createTweetValidator = validate(
         custom: {
           options: (value) => {
             if (!Array.isArray(value)) return true
-            if (!value.every((mention: any) => typeof mention === 'string' && ObjectId.isValid(mention))) {
+            if (
+              !value.every(
+                (mention: any) =>
+                  typeof mention === 'string' && ObjectId.isValid(mention)
+              )
+            ) {
               throw new Error(TWEETS_MESSAGES.MENTIONS_MUST_BE_ARRAY_OF_STRINGS)
             }
             return true
@@ -154,5 +163,47 @@ export const createTweetValidator = validate(
       }
     },
     ['body']
+  )
+)
+
+export const getTweetValidator = validate(
+  checkSchema(
+    {
+      tweet_id: {
+        notEmpty: {
+          errorMessage: TWEETS_MESSAGES.TWEET_ID_REQUIRED
+        },
+        custom: {
+          options: async (value) => {
+            if (!ObjectId.isValid(value)) {
+              throw new Error(TWEETS_MESSAGES.TWEET_ID_INVALID)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['params']
+  )
+)
+
+export const deleteTweetValidator = validate(
+  checkSchema(
+    {
+      tweet_id: {
+        notEmpty: {
+          errorMessage: TWEETS_MESSAGES.TWEET_ID_REQUIRED
+        },
+        custom: {
+          options: async (value) => {
+            if (!ObjectId.isValid(value)) {
+              throw new Error(TWEETS_MESSAGES.TWEET_ID_INVALID)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['params']
   )
 )

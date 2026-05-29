@@ -1,10 +1,11 @@
 import { TokenPayload } from '@/@types/express.js'
 import httpStatus from '@/constants/httpStatus.js'
+import { TWEETS_MESSAGES } from '@/constants/messages.js'
 import { TweetRequestBody } from '@/models/requests/Tweet.requests.js'
-
 import tweetService from '@/services/tweets.services.js'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+
 export const createTweetController = async (
   req: Request<ParamsDictionary, any, TweetRequestBody>,
   res: Response
@@ -13,5 +14,22 @@ export const createTweetController = async (
   const result = await tweetService.createTweet(req.body, user_id)
   return res
     .status(httpStatus.CREATED)
-    .json({ message: 'Tweet created successfully', result })
+    .json({ message: TWEETS_MESSAGES.TWEET_CREATED, result })
+}
+
+export const getTweetController = async (req: Request, res: Response) => {
+  const { tweet_id } = req.params
+  const result = await tweetService.getTweet(tweet_id as string)
+  return res
+    .status(httpStatus.OK)
+    .json({ message: TWEETS_MESSAGES.TWEET_FETCHED, result })
+}
+
+export const deleteTweetController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { tweet_id } = req.params
+  const result = await tweetService.deleteTweet(tweet_id as string, user_id)
+  return res
+    .status(httpStatus.OK)
+    .json({ message: TWEETS_MESSAGES.TWEET_DELETED, result })
 }

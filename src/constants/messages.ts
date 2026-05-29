@@ -112,7 +112,13 @@ export const TWEETS_MESSAGES = {
   MEDIAS_MUST_BE_AN_ARRAY_OF_MEDIA_OBJECTS:
     'Medias must be an array of media objects',
   PARENT_ID_NOT_EMPTY:
-    'Parent ID must not be empty for type Comment, QuoteTweet, or Retweet'
+    'Parent ID must not be empty for type Comment, QuoteTweet, or Retweet',
+  TWEET_ID_REQUIRED: 'Tweet ID is required',
+  TWEET_ID_INVALID: 'Tweet ID is invalid',
+  TWEET_NOT_FOUND: 'Tweet not found',
+  TWEET_FETCHED: 'Tweet fetched successfully',
+  TWEET_CREATED: 'Tweet created successfully',
+  TWEET_DELETED: 'Tweet deleted successfully'
 } as const
 
 export const LIKES_MESSAGES = {

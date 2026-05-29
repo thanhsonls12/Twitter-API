@@ -1,5 +1,8 @@
 import { ObjectId } from 'mongodb'
 import databaseService from './database.services.js'
+import { ErrorWithStatus } from '@/models/Errors.js'
+import { LIKES_MESSAGES } from '@/constants/messages.js'
+import httpStatus from '@/constants/httpStatus.js'
 
 class LikesService {
   async likeTweet(user_id: string, tweet_id: string) {
@@ -29,7 +32,10 @@ class LikesService {
       tweet_id: new ObjectId(tweet_id)
     })
     if (!like) {
-      throw new Error('Like not found')
+      throw new ErrorWithStatus({
+        message: LIKES_MESSAGES.LIKE_NOT_FOUND,
+        status: httpStatus.NOT_FOUND
+      })
     }
     const result = await databaseService.likes.deleteOne({
       user_id: new ObjectId(user_id),
