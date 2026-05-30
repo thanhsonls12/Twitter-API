@@ -257,3 +257,63 @@ export const audienceValidator = wrapRequestHandler(
     next()
   }
 )
+
+export const getTweetChildrenValidator = validate(
+  checkSchema({
+    tweet_id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: TWEETS_MESSAGES.TWEET_ID_REQUIRED
+      },
+      custom: {
+        options: (value) => {
+          if (!ObjectId.isValid(value)) {
+            throw new Error(TWEETS_MESSAGES.TWEET_ID_INVALID)
+          }
+          return true
+        }
+      }
+    },
+    type: {
+      in: ['query'],
+      optional: true,
+      isInt: {
+        errorMessage: TWEETS_MESSAGES.INVALID_TYPE
+      },
+      custom: {
+        options: (value) => {
+          if (
+            ![
+              TweetType.Comment,
+              TweetType.QuoteTweet,
+              TweetType.Retweet
+            ].includes(Number(value))
+          ) {
+            throw new Error(TWEETS_MESSAGES.INVALID_TYPE)
+          }
+          return true
+        }
+      },
+      toInt: true
+    },
+    page: {
+      in: ['query'],
+      optional: true,
+      isInt: {
+        options: { min: 1 },
+        errorMessage: TWEETS_MESSAGES.PAGE_MUST_BE_INTEGER_AND_GREATER_THAN_0
+      },
+      toInt: true
+    },
+    limit: {
+      in: ['query'],
+      optional: true,
+      isInt: {
+        options: { min: 1, max: 100 },
+        errorMessage:
+          TWEETS_MESSAGES.LIMIT_MUST_BE_INTEGER_AND_BETWEEN_1_AND_100
+      },
+      toInt: true
+    }
+  })
+)

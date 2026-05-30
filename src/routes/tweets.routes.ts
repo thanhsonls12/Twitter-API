@@ -1,12 +1,14 @@
 import {
   createTweetController,
   deleteTweetController,
+  getTweetChildrenController,
   getTweetController
 } from '@/controllers/tweets.controllers.js'
 import {
   audienceValidator,
   createTweetValidator,
   deleteTweetValidator,
+  getTweetChildrenValidator,
   getTweetValidator
 } from '@/middlewares/tweets.middlewares.js'
 import {
@@ -42,6 +44,14 @@ tweetsRouter.delete(
   verifiedUserValidator,
   deleteTweetValidator,
   wrapRequestHandler(deleteTweetController)
+)
+
+tweetsRouter.get(
+  '/:tweet_id/children',
+  isUserLoggedInValidator(accessTokenValidator),
+  isUserLoggedInValidator(verifiedUserValidator),
+  getTweetChildrenValidator,
+  wrapRequestHandler(getTweetChildrenController)
 )
 
 export default tweetsRouter

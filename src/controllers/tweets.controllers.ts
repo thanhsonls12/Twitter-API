@@ -34,3 +34,22 @@ export const deleteTweetController = async (req: Request, res: Response) => {
     .status(httpStatus.OK)
     .json({ message: TWEETS_MESSAGES.TWEET_DELETED, result })
 }
+
+export const getTweetChildrenController = async (
+  req: Request,
+  res: Response
+) => {
+  const { tweet_id } = req.params
+  const type = req.query.type ? Number(req.query.type) : undefined
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 2
+  const result = await tweetService.getTweetChildren(
+    tweet_id as string,
+    type,
+    page,
+    limit
+  )
+  return res
+    .status(httpStatus.OK)
+    .json({ message: TWEETS_MESSAGES.TWEET_CHILDREN_FETCHED, result })
+}
