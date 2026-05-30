@@ -6,6 +6,8 @@ import Hashtag from '@/models/schemas/Hashtag.schema.js'
 import { TWEETS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
+import { TweetType } from '@/constants/enums.js'
+import { envConfig } from '@/config/env.js'
 
 class TweetService {
   async checkAndCreateHashtags(hashtags: string[]) {
@@ -44,16 +46,126 @@ class TweetService {
     return result
   }
 
-  async getTweet(tweet_id: string) {
-    const tweet = await databaseService.tweets.findOne({
-      _id: new ObjectId(tweet_id)
-    })
+  async getTweet(tweet_id: string, user_id?: string) {
+    const [tweet] = await databaseService.tweets
+      .aggregate([
+        {
+          $match: {
+            _id: new ObjectId(tweet_id)
+          }
+        },
+        {
+          $lookup: {
+            from: envConfig.HASHTAGS_COLLECTION,
+            localField: 'hashtags',
+            foreignField: '_id',
+            as: 'hashtags'
+          }
+        },
+        {
+          $lookup: {
+            from: envConfig.USERS_COLLECTION,
+            localField: 'mentions',
+            foreignField: '_id',
+            as: 'mentions'
+          }
+        },
+        {
+          $addFields: {
+            mentions: {
+              $map: {
+                input: '$mentions',
+                as: 'mention',
+                in: {
+                  _id: '$$mention._id',
+                  name: '$$mention.name',
+                  username: '$$mention.username',
+                  avatar: '$$mention.avatar'
+                }
+              }
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: envConfig.BOOKMARKS_COLLECTION,
+            localField: '_id',
+            foreignField: 'tweet_id',
+            as: 'bookmarks'
+          }
+        },
+        {
+          $lookup: {
+            from: envConfig.LIKES_COLLECTION,
+            localField: '_id',
+            foreignField: 'tweet_id',
+            as: 'likes'
+          }
+        },
+        {
+          $lookup: {
+            from: envConfig.TWEETS_COLLECTION,
+            localField: '_id',
+            foreignField: 'parent_id',
+            as: 'tweet_children'
+          }
+        },
+        {
+          $addFields: {
+            bookmarks_count: { $size: '$bookmarks' },
+            likes_count: { $size: '$likes' },
+            retweet_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                }
+              }
+            },
+            comment_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: { $eq: ['$$item.type', TweetType.Comment] }
+                }
+              }
+            },
+            quote_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
+                }
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            bookmarks: 0,
+            likes: 0,
+            tweet_children: 0
+          }
+        }
+      ])
+      .toArray()
     if (!tweet) {
       throw new ErrorWithStatus({
         message: TWEETS_MESSAGES.TWEET_NOT_FOUND,
         status: httpStatus.NOT_FOUND
       })
     }
+
+    await databaseService.tweets.updateOne(
+      { _id: new ObjectId(tweet_id) },
+      { $inc: user_id ? { user_views: 1 } : { guest_views: 1 } }
+    )
+
+    tweet.user_views += user_id ? 1 : 0
+    tweet.guest_views += user_id ? 0 : 1
     return tweet
   }
 
