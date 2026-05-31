@@ -124,7 +124,8 @@ export const TWEETS_MESSAGES = {
   PAGE_MUST_BE_INTEGER_AND_GREATER_THAN_0:
     'Page must be an integer greater than 0',
   LIMIT_MUST_BE_INTEGER_AND_BETWEEN_1_AND_100:
-    'Limit must be an integer between 1 and 100'
+    'Limit must be an integer between 1 and 100',
+  NEW_FEEDS_FETCHED: 'New feeds fetched successfully'
 } as const
 
 export const LIKES_MESSAGES = {

@@ -1,6 +1,7 @@
 import {
   createTweetController,
   deleteTweetController,
+  getNewFeedsController,
   getTweetChildrenController,
   getTweetController
 } from '@/controllers/tweets.controllers.js'
@@ -9,7 +10,8 @@ import {
   createTweetValidator,
   deleteTweetValidator,
   getTweetChildrenValidator,
-  getTweetValidator
+  getTweetValidator,
+  paginationValidator
 } from '@/middlewares/tweets.middlewares.js'
 import {
   accessTokenValidator,
@@ -20,6 +22,14 @@ import { wrapRequestHandler } from '@/utils/handler.js'
 import experss from 'express'
 
 const tweetsRouter = experss.Router()
+
+tweetsRouter.get(
+  '/new-feeds',
+  accessTokenValidator,
+  verifiedUserValidator,
+  paginationValidator,
+  wrapRequestHandler(getNewFeedsController)
+)
 
 tweetsRouter.get(
   '/:tweet_id',

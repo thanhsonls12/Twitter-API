@@ -19,7 +19,7 @@ export const createTweetController = async (
 
 export const getTweetController = async (req: Request, res: Response) => {
   const { tweet_id } = req.params
-  const { user_id } = req.decoded_authorization as TokenPayload
+  const user_id = (req.decoded_authorization as TokenPayload | undefined)?.user_id
   const result = await tweetService.getTweet(tweet_id as string, user_id)
   return res
     .status(httpStatus.OK)
@@ -40,16 +40,28 @@ export const getTweetChildrenController = async (
   res: Response
 ) => {
   const { tweet_id } = req.params
+  const { user_id } = req.decoded_authorization as TokenPayload
   const type = req.query.type ? Number(req.query.type) : undefined
   const page = Number(req.query.page) || 1
-  const limit = Number(req.query.limit) || 2
+  const limit = Number(req.query.limit) || 20
   const result = await tweetService.getTweetChildren(
     tweet_id as string,
     type,
     page,
-    limit
+    limit,
+    user_id
   )
   return res
     .status(httpStatus.OK)
     .json({ message: TWEETS_MESSAGES.TWEET_CHILDREN_FETCHED, result })
+}
+
+export const getNewFeedsController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 20
+  const result = await tweetService.getNewFeeds(user_id, page, limit)
+  return res
+    .status(httpStatus.OK)
+    .json({ message: TWEETS_MESSAGES.NEW_FEEDS_FETCHED, result })
 }

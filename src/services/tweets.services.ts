@@ -6,8 +6,12 @@ import Hashtag from '@/models/schemas/Hashtag.schema.js'
 import { TWEETS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
-import { TweetAudience, TweetType } from '@/constants/enums.js'
+import { TweetAudience } from '@/constants/enums.js'
 import { envConfig } from '@/config/env.js'
+import {
+  authorLookupStages,
+  commonTweetAggregationStages
+} from '@/utils/aggregation.helpers.js'
 
 class TweetService {
   async checkAndCreateHashtags(hashtags: string[]) {
@@ -54,102 +58,7 @@ class TweetService {
             _id: new ObjectId(tweet_id)
           }
         },
-        {
-          $lookup: {
-            from: envConfig.HASHTAGS_COLLECTION,
-            localField: 'hashtags',
-            foreignField: '_id',
-            as: 'hashtags'
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.USERS_COLLECTION,
-            localField: 'mentions',
-            foreignField: '_id',
-            as: 'mentions'
-          }
-        },
-        {
-          $addFields: {
-            mentions: {
-              $map: {
-                input: '$mentions',
-                as: 'mention',
-                in: {
-                  _id: '$$mention._id',
-                  name: '$$mention.name',
-                  username: '$$mention.username',
-                  avatar: '$$mention.avatar'
-                }
-              }
-            }
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.BOOKMARKS_COLLECTION,
-            localField: '_id',
-            foreignField: 'tweet_id',
-            as: 'bookmarks'
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.LIKES_COLLECTION,
-            localField: '_id',
-            foreignField: 'tweet_id',
-            as: 'likes'
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.TWEETS_COLLECTION,
-            localField: '_id',
-            foreignField: 'parent_id',
-            as: 'tweet_children'
-          }
-        },
-        {
-          $addFields: {
-            bookmarks_count: { $size: '$bookmarks' },
-            likes_count: { $size: '$likes' },
-            retweet_count: {
-              $size: {
-                $filter: {
-                  input: '$tweet_children',
-                  as: 'item',
-                  cond: { $eq: ['$$item.type', TweetType.Retweet] }
-                }
-              }
-            },
-            comment_count: {
-              $size: {
-                $filter: {
-                  input: '$tweet_children',
-                  as: 'item',
-                  cond: { $eq: ['$$item.type', TweetType.Comment] }
-                }
-              }
-            },
-            quote_count: {
-              $size: {
-                $filter: {
-                  input: '$tweet_children',
-                  as: 'item',
-                  cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
-                }
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            bookmarks: 0,
-            likes: 0,
-            tweet_children: 0
-          }
-        }
+        ...commonTweetAggregationStages()
       ])
       .toArray()
     if (!tweet) {
@@ -161,7 +70,10 @@ class TweetService {
 
     await databaseService.tweets.updateOne(
       { _id: new ObjectId(tweet_id) },
-      { $inc: user_id ? { user_views: 1 } : { guest_views: 1 } }
+      {
+        $inc: user_id ? { user_views: 1 } : { guest_views: 1 },
+        $set: { updated_at: new Date() }
+      }
     )
 
     tweet.user_views += user_id ? 1 : 0
@@ -190,7 +102,8 @@ class TweetService {
     tweet_id: string,
     type?: number,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
+    user_id?: string
   ) {
     const matchStage: any = {
       parent_id: new ObjectId(tweet_id),
@@ -200,22 +113,72 @@ class TweetService {
       matchStage.type = type
     }
     const skip = (page - 1) * limit
-    const total = await databaseService.tweets.countDocuments(matchStage)
 
     const children = await databaseService.tweets
       .aggregate([
+        { $match: matchStage },
+        { $sort: { _id: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        ...authorLookupStages(),
+        ...commonTweetAggregationStages()
+      ])
+      .toArray()
+
+    const [, total] = await Promise.all([
+      databaseService.tweets.updateMany(matchStage, {
+        $inc: user_id ? { user_views: 1 } : { guest_views: 1 }
+      }),
+      databaseService.tweets.countDocuments(matchStage)
+    ])
+
+    const total_pages = Math.ceil(total / limit)
+
+    children.forEach((child) => {
+      child.user_views += user_id ? 1 : 0
+      child.guest_views += user_id ? 0 : 1
+    })
+
+    return {
+      children,
+      pagination: {
+        page,
+        limit,
+        total,
+        total_pages
+      }
+    }
+  }
+
+  async getNewFeeds(user_id: string, page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit
+    const followedUsers = await databaseService.follows
+      .find(
         {
-          $match: matchStage
+          follower_id: new ObjectId(user_id)
         },
         {
-          $sort: { _id: -1 }
-        },
+          projection: { following_id: 1 }
+        }
+      )
+      .toArray()
+
+    const followingIds = followedUsers.map((follow) => follow.following_id)
+
+    const matchStage = {
+      user_id: { $in: followingIds },
+      $or: [
+        { audience: TweetAudience.Everyone },
         {
-          $skip: skip
-        },
-        {
-          $limit: limit
-        },
+          $and: [
+            { audience: TweetAudience.TwitterCircle },
+            { 'author.twitter_circle': new ObjectId(user_id) }
+          ]
+        }
+      ]
+    }
+    const [result] = await databaseService.tweets
+      .aggregate([
         {
           $lookup: {
             from: envConfig.USERS_COLLECTION,
@@ -224,123 +187,52 @@ class TweetService {
             as: 'author'
           }
         },
+        { $unwind: '$author' },
+        { $match: matchStage },
+        { $sort: { created_at: -1 } },
         {
-          $unwind: '$author'
-        },
-        {
-          $project: {
-            'author.password': 0,
-            'author.email_verify_token': 0,
-            'author.forgot_password_token': 0
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.HASHTAGS_COLLECTION,
-            localField: 'hashtags',
-            foreignField: '_id',
-            as: 'hashtags'
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.USERS_COLLECTION,
-            localField: 'mentions',
-            foreignField: '_id',
-            as: 'mentions'
-          }
-        },
-        {
-          $addFields: {
-            mentions: {
-              $map: {
-                input: '$mentions',
-                as: 'mention',
-                in: {
-                  _id: '$$mention._id',
-                  name: '$$mention.name',
-                  username: '$$mention.username',
-                  avatar: '$$mention.avatar'
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [
+              { $skip: skip },
+              { $limit: limit },
+              {
+                $project: {
+                  'author.password': 0,
+                  'author.email_verify_token': 0,
+                  'author.forgot_password_token': 0,
+                  'author.twitter_circle': 0
                 }
-              }
-            }
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.LIKES_COLLECTION,
-            localField: '_id',
-            foreignField: 'tweet_id',
-            as: 'likes'
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.BOOKMARKS_COLLECTION,
-            localField: '_id',
-            foreignField: 'tweet_id',
-            as: 'bookmarks'
-          }
-        },
-        {
-          $lookup: {
-            from: envConfig.TWEETS_COLLECTION,
-            localField: '_id',
-            foreignField: 'parent_id',
-            as: 'tweet_children'
-          }
-        },
-        {
-          $addFields: {
-            likes_count: { $size: '$likes' },
-            bookmarks_count: { $size: '$bookmarks' },
-            retweet_count: {
-              $size: {
-                $filter: {
-                  input: '$tweet_children',
-                  as: 'item',
-                  cond: { $eq: ['$$item.type', TweetType.Retweet] }
-                }
-              }
-            },
-            comment_count: {
-              $size: {
-                $filter: {
-                  input: '$tweet_children',
-                  as: 'item',
-                  cond: { $eq: ['$$item.type', TweetType.Comment] }
-                }
-              }
-            },
-            quote_count: {
-              $size: {
-                $filter: {
-                  input: '$tweet_children',
-                  as: 'item',
-                  cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
-                }
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            likes: 0,
-            bookmarks: 0,
-            tweet_children: 0
+              },
+              ...commonTweetAggregationStages()
+            ]
           }
         }
       ])
       .toArray()
+    const total = result.metadata[0]?.total ?? 0
+    const tweets = result.data
+    const tweetIds = tweets.map((tweet: any) => tweet._id)
+    await databaseService.tweets.updateMany(
+      {
+        _id: { $in: tweetIds }
+      },
+      {
+        $inc: { user_views: 1 }
+      }
+    )
 
-    const total_pages = Math.ceil(total / limit)
+    tweets.forEach((tweet: any) => {
+      tweet.user_views += 1
+    })
+
     return {
-      children,
+      tweets,
       pagination: {
         page,
         limit,
         total,
-        total_pages
+        total_pages: Math.ceil(total / limit)
       }
     }
   }

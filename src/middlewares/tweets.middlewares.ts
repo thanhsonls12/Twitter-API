@@ -317,3 +317,27 @@ export const getTweetChildrenValidator = validate(
     }
   })
 )
+
+export const paginationValidator = validate(
+  checkSchema({
+    page: {
+      in: ['query'],
+      optional: true,
+      isInt: {
+        options: { min: 1 },
+        errorMessage: TWEETS_MESSAGES.PAGE_MUST_BE_INTEGER_AND_GREATER_THAN_0
+      },
+      toInt: true
+    },
+    limit: {
+      in: ['query'],
+      optional: true,
+      isInt: {
+        options: { min: 1, max: 100 },
+        errorMessage:
+          TWEETS_MESSAGES.LIMIT_MUST_BE_INTEGER_AND_BETWEEN_1_AND_100
+      },
+      toInt: true
+    }
+  })
+)
