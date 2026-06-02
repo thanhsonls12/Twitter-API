@@ -158,3 +158,17 @@ export const TWITTER_CIRCLE_MESSAGES = {
   CIRCLE_LIMIT_REACHED: 'Twitter Circle can have a maximum of 150 members',
   USER_NOT_FOUND: 'User not found'
 } as const
+
+export const SEARCH_MESSAGES = {
+  SEARCH_QUERY_REQUIRED: 'Search query is required',
+  SEARCH_QUERY_MUST_BE_STRING: 'Search query must be a string',
+  SEARCH_QUERY_LENGTH: 'Search query must be between 1 and 100 characters',
+  PAGE_MUST_BE_INTEGER_AND_GREATER_THAN_0:
+    'Page must be an integer greater than 0',
+  LIMIT_MUST_BE_INTEGER_AND_BETWEEN_1_AND_100:
+    'Limit must be an integer between 1 and 100',
+  USERS_FETCHED_SUCCESSFULLY: 'Users fetched successfully',
+  TWEETS_FETCHED_SUCCESSFULLY: 'Tweets fetched successfully',
+  MEDIA_TYPE_INVALID: 'Media type is invalid',
+  PEOPLE_FOLLOW_INVALID: 'People follow must be either 0 or 1'
+} as const

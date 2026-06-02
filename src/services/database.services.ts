@@ -44,6 +44,12 @@ class DatabaseService {
       'user_id_1_tweet_id_1'
     ])
     const existsLikes = await this.likes.indexExists(['user_id_1_tweet_id_1'])
+    const existsUsersTextIndex = await this.users.indexExists([
+      'username_text_name_text'
+    ])
+    const existsTweetsContentTextIndex =
+      (await this.tweets.indexExists(['content_text'])) ||
+      (await this.tweets.indexExists(['conetnt_text']))
     if (
       existsUsers &&
       existsRefreshTokens &&
@@ -51,7 +57,9 @@ class DatabaseService {
       existsVideoStatus &&
       existsHashtags &&
       existsBookmarks &&
-      existsLikes
+      existsLikes &&
+      existsUsersTextIndex &&
+      existsTweetsContentTextIndex
     ) {
       return
     }
@@ -63,6 +71,13 @@ class DatabaseService {
         {
           unique: true,
           partialFilterExpression: { username: { $gt: '' } }
+        }
+      ),
+      this.users.createIndex(
+        { username: 'text', name: 'text' },
+        {
+          weights: { username: 10, name: 5 },
+          name: 'username_text_name_text'
         }
       ),
       this.refreshTokens.createIndex({ token: 1 }, { unique: true }),
@@ -77,7 +92,11 @@ class DatabaseService {
       this.videoStatus.createIndex({ name: 1 }, { unique: true }),
       this.hashtags.createIndex({ name: 1 }, { unique: true }),
       this.bookmarks.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true }),
-      this.likes.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true })
+      this.likes.createIndex({ user_id: 1, tweet_id: 1 }, { unique: true }),
+      this.tweets.createIndex(
+        { content: 'text' },
+        { name: 'content_text', default_language: 'none' }
+      )
     ])
   }
 
