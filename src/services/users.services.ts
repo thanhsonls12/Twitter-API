@@ -15,6 +15,7 @@ import { AUTH_MESSAGES, USERS_MESSAGES } from '@/constants/messages.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
 import Follow from '@/models/schemas/Follow.schema.js'
+import { sendForgotPasswordEmail, sendVerifyEmail } from '@/utils/email.js'
 
 class UsersService {
   private signAccessToken({
@@ -149,7 +150,7 @@ class UsersService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
-    console.log('email_verify_token:', email_verify_token)
+    await sendVerifyEmail(payload.email, email_verify_token)
     return {
       ...result,
       user_id,
@@ -337,7 +338,7 @@ class UsersService {
         $currentDate: { updated_at: true }
       }
     )
-    console.log('resend email_verify_token', email_verify_token)
+    await sendVerifyEmail(user.email, email_verify_token)
     return {
       message: AUTH_MESSAGES.EMAIL_VERIFY_TOKEN_RESENT_SUCCESSFULLY
     }
@@ -364,7 +365,7 @@ class UsersService {
         $currentDate: { updated_at: true }
       }
     )
-    console.log('forgot_password_token', forgot_password_token)
+    await sendForgotPasswordEmail(user.email, forgot_password_token)
     return {
       message: AUTH_MESSAGES.FORGOT_PASSWORD_EMAIL_SENT
     }

@@ -19,9 +19,9 @@ import {
   verifiedUserValidator
 } from '@/middlewares/users.middlewares.js'
 import { wrapRequestHandler } from '@/utils/handler.js'
-import experss from 'express'
+import express from 'express'
 
-const tweetsRouter = experss.Router()
+const tweetsRouter = express.Router()
 
 tweetsRouter.get(
   '/new-feeds',

@@ -1,11 +1,10 @@
-import { UPLOAD_IMAGE_DIR } from '@/constants/dir.js'
+import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '@/constants/dir.js'
 import { handleUploadImage, handleUploadVideo } from '@/utils/file.js'
 import { Request } from 'express'
 import path from 'path'
 import sharp from 'sharp'
 import fs from 'fs'
 import { fileTypeFromFile } from 'file-type'
-import { isProduction } from '@/constants/config.js'
 import { envConfig } from '@/config/env.js'
 import { EncodingStatus, MediaType } from '@/constants/enums.js'
 import { Media } from '@/models/Other.js'
@@ -15,6 +14,10 @@ import { MEDIAS_MESSAGES } from '@/constants/messages.js'
 import { encodeHLSWithMultipleVideoStreams } from '@/utils/video.js'
 import databaseService from './database.services.js'
 import VideoStatus from '@/models/schemas/VideoStatus.schema.js'
+import {
+  uploadFolderToSupabase,
+  uploadToSupabase
+} from '@/utils/supabaseStorage.js'
 
 const allowedVideoMimes = ['video/mp4', 'video/webm', 'video/quicktime']
 
@@ -54,6 +57,14 @@ class Queue {
       )
       try {
         await encodeHLSWithMultipleVideoStreams(videoPath)
+        const hlsFolder = path.resolve(UPLOAD_VIDEO_DIR, idName)
+        await uploadFolderToSupabase({
+          bucket: 'videos',
+          folderPath: hlsFolder,
+          remotePrefix: idName
+        })
+        fs.promises.unlink(videoPath)
+        fs.promises.rm(hlsFolder, { recursive: true, force: true })
         this.items.shift()
         fs.promises.unlink(videoPath)
         await databaseService.videoStatus.updateOne(
@@ -99,10 +110,17 @@ class MediasServices {
 
         await sharp(file.filepath).jpeg().toFile(outputPath)
         fs.unlinkSync(file.filepath)
+
+        const url = await uploadToSupabase({
+          bucket: 'images',
+          filePath: outputPath,
+          fileName: outputFilename
+        })
+
+        fs.unlinkSync(outputPath)
+
         return {
-          url: isProduction
-            ? `${envConfig.BASE_URL}/images/${outputFilename}`
-            : `http://localhost:${envConfig.PORT}/images/${outputFilename}`,
+          url,
           type: MediaType.Image
         }
       })
@@ -124,10 +142,16 @@ class MediasServices {
           })
         }
 
+        const url = await uploadToSupabase({
+          bucket: 'videos',
+          filePath: file.filepath,
+          fileName: file.newFilename
+        })
+
+        fs.unlinkSync(file.filepath)
+
         return {
-          url: isProduction
-            ? `${envConfig.BASE_URL}/videos/${file.newFilename}`
-            : `http://localhost:${envConfig.PORT}/videos/${file.newFilename}`,
+          url,
           type: MediaType.Video
         }
       })
@@ -140,11 +164,10 @@ class MediasServices {
     const files = await handleUploadVideo(req)
     const result: Media[] = await Promise.all(
       files.map(async (file) => {
+        const idName = path.parse(file.newFilename).name
         queue.enqueue({ videoPath: file.filepath, fileName: file.newFilename })
         return {
-          url: isProduction
-            ? `${envConfig.BASE_URL}/videos/${path.parse(file.newFilename).name}/master.m3u8`
-            : `http://localhost:${envConfig.PORT}/videos/${path.parse(file.newFilename).name}/master.m3u8`,
+          url: `${envConfig.SUPABASE_URL}/storage/v1/object/public/videos/${idName}/master.m3u8`,
           type: MediaType.VideoHLS
         }
       })

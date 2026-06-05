@@ -23,7 +23,13 @@ const requiredEnvVariables = [
   'TWEETS_COLLECTION',
   'HASHTAGS_COLLECTION',
   'BOOKMARKS_COLLECTION',
-  'LIKES_COLLECTION'
+  'LIKES_COLLECTION',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASSWORD',
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY'
 ] as const
 
 for (const envName of requiredEnvVariables) {
@@ -70,5 +76,11 @@ export const envConfig = {
   BOOKMARKS_COLLECTION: process.env.BOOKMARKS_COLLECTION as string,
   LIKES_COLLECTION: process.env.LIKES_COLLECTION as string,
   BASE_URL:
-    process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`
+    process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`,
+  SMTP_HOST: process.env.SMTP_HOST as string,
+  SMTP_PORT: Number(process.env.SMTP_PORT),
+  SMTP_USER: process.env.SMTP_USER as string,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
+  SUPABASE_URL: process.env.SUPABASE_URL as string,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY as string
 }

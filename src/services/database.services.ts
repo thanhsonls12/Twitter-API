@@ -47,9 +47,9 @@ class DatabaseService {
     const existsUsersTextIndex = await this.users.indexExists([
       'username_text_name_text'
     ])
-    const existsTweetsContentTextIndex =
-      (await this.tweets.indexExists(['content_text'])) ||
-      (await this.tweets.indexExists(['conetnt_text']))
+    const existsTweetsContentTextIndex = await this.tweets.indexExists([
+      'content_text'
+    ])
     if (
       existsUsers &&
       existsRefreshTokens &&
