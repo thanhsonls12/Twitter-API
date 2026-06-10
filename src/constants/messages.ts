@@ -172,3 +172,29 @@ export const SEARCH_MESSAGES = {
   MEDIA_TYPE_INVALID: 'Media type is invalid',
   PEOPLE_FOLLOW_INVALID: 'People follow must be either 0 or 1'
 } as const
+
+export const CONVERSATIONS_MESSAGES = {
+  RECEIVER_ID_REQUIRED: 'Receiver ID is required',
+  RECEIVER_ID_INVALID: 'Receiver ID is invalid',
+  CANNOT_CREATE_CONVERSATION_WITH_YOURSELF:
+    'You cannot create a conversation with yourself',
+  RECEIVER_NOT_FOUND: 'Receiver not found',
+  CONVERSATION_ID_INVALID: 'Conversation ID is invalid',
+  CONVERSATION_NOT_FOUND: 'Conversation not found',
+  CONTENT_REQUIRED: 'Message content is required',
+  CONVERSATIONS_FETCHED: 'Conversations fetched successfully',
+  CONVERSATION_CREATED: 'Conversation created successfully',
+  MESSAGES_FETCHED: 'Messages fetched successfully'
+} as const
+
+export const SOCKET_MESSAGES = {
+  TOKEN_REQUIRED: 'Authentication error: Token is required',
+  TOKEN_INVALID: 'Authentication error: Invalid token',
+  INVALID_PAYLOAD: 'Invalid socket payload',
+  SEND_MESSAGE_FAILED: 'Failed to send message',
+  TYPING_FAILED: 'Failed to send typing status',
+  USER_CONNECTED: 'User connected',
+  USER_DISCONNECTED: 'User disconnected',
+  MESSAGE_RECEIVED: 'Message received',
+  USER_TYPING: 'User is typing'
+} as const

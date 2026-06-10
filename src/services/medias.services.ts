@@ -63,10 +63,10 @@ class Queue {
           folderPath: hlsFolder,
           remotePrefix: idName
         })
-        fs.promises.unlink(videoPath)
-        fs.promises.rm(hlsFolder, { recursive: true, force: true })
+        await fs.promises.unlink(videoPath)
+        await fs.promises.rm(hlsFolder, { recursive: true, force: true })
         this.items.shift()
-        fs.promises.unlink(videoPath)
+        await fs.promises.unlink(videoPath)
         await databaseService.videoStatus.updateOne(
           { name: idName },
           {

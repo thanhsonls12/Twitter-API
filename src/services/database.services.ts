@@ -8,6 +8,8 @@ import Tweet from '@/models/schemas/Tweet.schema.js'
 import Hashtag from '@/models/schemas/Hashtag.schema.js'
 import { Bookmark } from '@/models/schemas/Bookmark.schema.js'
 import { Like } from '@/models/schemas/Like.schema.js'
+import Conversation from '@/models/schemas/Conversation.schema.js'
+import Message from '@/models/schemas/Message.schema.js'
 
 const uri = envConfig.MONGO_URI
 
@@ -50,6 +52,12 @@ class DatabaseService {
     const existsTweetsContentTextIndex = await this.tweets.indexExists([
       'content_text'
     ])
+    // const existsConversations = await this.conversations.indexExists([
+    //   'participants_1'
+    // ])
+    // const existsMessages = await this.messages.indexExists([
+    //   'conversation_id_1_created_at_-1'
+    // ])
     if (
       existsUsers &&
       existsRefreshTokens &&
@@ -60,6 +68,8 @@ class DatabaseService {
       existsLikes &&
       existsUsersTextIndex &&
       existsTweetsContentTextIndex
+      // existsConversations &&
+      // existsMessages
     ) {
       return
     }
@@ -97,6 +107,8 @@ class DatabaseService {
         { content: 'text' },
         { name: 'content_text', default_language: 'none' }
       )
+      // this.conversations.createIndex({ participants: 1 }),
+      // this.messages.createIndex({ conversation_id: 1, created_at: -1 })
     ])
   }
 
@@ -134,6 +146,14 @@ class DatabaseService {
 
   get likes(): Collection<Like> {
     return this.db.collection(envConfig.LIKES_COLLECTION)
+  }
+
+  get conversations(): Collection<Conversation> {
+    return this.db.collection(envConfig.CONVERSATIONS_COLLECTION)
+  }
+
+  get messages(): Collection<Message> {
+    return this.db.collection(envConfig.MESSAGES_COLLECTION)
   }
 }
 

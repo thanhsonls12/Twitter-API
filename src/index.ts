@@ -15,8 +15,11 @@ import bookmarksRouter from './routes/bookmarks.routes.js'
 import likesRouter from './routes/likes.routes.js'
 import twitterCircleRouter from './routes/twitterCircle.routes.js'
 import searchRouter from './routes/search.routes.js'
-
+import http from 'http'
+import { initSocket } from './socket/index.js'
+import conversationsRouter from './routes/conversations.routes.js'
 const app = express()
+const server = http.createServer(app)
 const port = Number(envConfig.PORT)
 app.use(helmet())
 app.use(express.json({ limit: '10kb' }))
@@ -33,11 +36,14 @@ app.use('/bookmarks', bookmarksRouter)
 app.use('/likes', likesRouter)
 app.use('/twitter-circle', twitterCircleRouter)
 app.use('/search', searchRouter)
+app.use('/conversations', conversationsRouter)
 async function startServer() {
   try {
     await databaseService.connect().then(() => databaseService.createIndexes())
     app.use(defaultErrorHandler)
-    app.listen(port, () => {
+    initSocket(server)
+
+    server.listen(port, () => {
       console.log(`Server is running on port ${port}`)
     })
   } catch (error) {

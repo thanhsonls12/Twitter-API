@@ -29,7 +29,9 @@ const requiredEnvVariables = [
   'SMTP_USER',
   'SMTP_PASSWORD',
   'SUPABASE_URL',
-  'SUPABASE_SERVICE_ROLE_KEY'
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'CONVERSATIONS_COLLECTION',
+  'MESSAGES_COLLECTION'
 ] as const
 
 for (const envName of requiredEnvVariables) {
@@ -82,5 +84,7 @@ export const envConfig = {
   SMTP_USER: process.env.SMTP_USER as string,
   SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
   SUPABASE_URL: process.env.SUPABASE_URL as string,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY as string
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+  CONVERSATIONS_COLLECTION: process.env.CONVERSATIONS_COLLECTION as string,
+  MESSAGES_COLLECTION: process.env.MESSAGES_COLLECTION as string
 }
