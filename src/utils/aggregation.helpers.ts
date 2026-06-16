@@ -116,8 +116,10 @@ export const authorLookupStages = (): Document[] => [
   {
     $project: {
       'author.password': 0,
+      'author.email': 0,
       'author.email_verify_token': 0,
-      'author.forgot_password_token': 0
+      'author.forgot_password_token': 0,
+      'author.twitter_circle': 0
     }
   }
 ]

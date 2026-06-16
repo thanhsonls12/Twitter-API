@@ -52,12 +52,17 @@ class DatabaseService {
     const existsTweetsContentTextIndex = await this.tweets.indexExists([
       'content_text'
     ])
-    // const existsConversations = await this.conversations.indexExists([
-    //   'participants_1'
-    // ])
-    // const existsMessages = await this.messages.indexExists([
-    //   'conversation_id_1_created_at_-1'
-    // ])
+    const existsConversationsParticipants =
+      await this.conversations.indexExists(['participants_1'])
+    const existsConversationsUpdatedAt = await this.conversations.indexExists([
+      'updated_at_-1'
+    ])
+    const existsMessagesConversationCreatedAt =
+      await this.messages.indexExists(['conversation_id_1_created_at_-1'])
+    const existsTweetsParent = await this.tweets.indexExists(['parent_id_1'])
+    const existsTweetsUserCreatedAt = await this.tweets.indexExists([
+      'user_id_1_created_at_-1'
+    ])
     if (
       existsUsers &&
       existsRefreshTokens &&
@@ -67,9 +72,12 @@ class DatabaseService {
       existsBookmarks &&
       existsLikes &&
       existsUsersTextIndex &&
-      existsTweetsContentTextIndex
-      // existsConversations &&
-      // existsMessages
+      existsTweetsContentTextIndex &&
+      existsConversationsParticipants &&
+      existsConversationsUpdatedAt &&
+      existsMessagesConversationCreatedAt &&
+      existsTweetsParent &&
+      existsTweetsUserCreatedAt
     ) {
       return
     }
@@ -106,9 +114,12 @@ class DatabaseService {
       this.tweets.createIndex(
         { content: 'text' },
         { name: 'content_text', default_language: 'none' }
-      )
-      // this.conversations.createIndex({ participants: 1 }),
-      // this.messages.createIndex({ conversation_id: 1, created_at: -1 })
+      ),
+      this.conversations.createIndex({ participants: 1 }),
+      this.conversations.createIndex({ updated_at: -1 }),
+      this.messages.createIndex({ conversation_id: 1, created_at: -1 }),
+      this.tweets.createIndex({ parent_id: 1 }),
+      this.tweets.createIndex({ user_id: 1, created_at: -1 })
     ])
   }
 

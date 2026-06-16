@@ -11,6 +11,8 @@ import { NextFunction, Request, Response } from 'express'
 import databaseService from '@/services/database.services.js'
 import { ErrorWithStatus } from '@/models/Errors.js'
 import httpStatus from '@/constants/httpStatus.js'
+import { TokenPayload } from '@/@types/express.js'
+import { assertCanAccessTweet } from '@/utils/tweetAudience.js'
 const tweetTypes = numberEnumToArray(TweetType)
 
 const tweetAudiences = numberEnumToArray(TweetAudience)
@@ -43,7 +45,7 @@ export const createTweetValidator = validate(
       parent_id: {
         optional: { options: { nullable: true } },
         custom: {
-          options: (value, { req }) => {
+          options: async (value, { req }) => {
             const type = req.body.type as TweetType
             if (
               [
@@ -65,6 +67,8 @@ export const createTweetValidator = validate(
             ) {
               throw new Error(TWEETS_MESSAGES.PARENT_ID_MUST_BE_NULL)
             }
+            const { user_id } = req.decoded_authorization as TokenPayload
+            await assertCanAccessTweet(value, user_id)
             return true
           }
         }

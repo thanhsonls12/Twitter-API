@@ -19,7 +19,8 @@ export const createTweetController = async (
 
 export const getTweetController = async (req: Request, res: Response) => {
   const { tweet_id } = req.params
-  const user_id = (req.decoded_authorization as TokenPayload | undefined)?.user_id
+  const user_id = (req.decoded_authorization as TokenPayload | undefined)
+    ?.user_id
   const result = await tweetService.getTweet(tweet_id as string, user_id)
   return res
     .status(httpStatus.OK)
@@ -40,7 +41,7 @@ export const getTweetChildrenController = async (
   res: Response
 ) => {
   const { tweet_id } = req.params
-  const { user_id } = req.decoded_authorization as TokenPayload
+  const user_id = req.decoded_authorization?.user_id
   const type = req.query.type ? Number(req.query.type) : undefined
   const page = Number(req.query.page) || 1
   const limit = Number(req.query.limit) || 20

@@ -415,6 +415,9 @@ class UsersService {
         $currentDate: { updated_at: true }
       }
     )
+    await databaseService.refreshTokens.deleteMany({
+      user_id: new ObjectId(user_id)
+    })
     return { message: AUTH_MESSAGES.RESET_PASSWORD_SUCCESSFULLY }
   }
 

@@ -19,11 +19,18 @@ import http from 'http'
 import { initSocket } from './socket/index.js'
 import conversationsRouter from './routes/conversations.routes.js'
 import { setupSwagger } from './config/swagger.js'
+import cors from 'cors'
 const app = express()
 const server = http.createServer(app)
 const port = Number(envConfig.PORT)
 setupSwagger(app)
 app.use(helmet())
+app.use(
+  cors({
+    origin: envConfig.CLIENT_URL,
+    credentials: true
+  })
+)
 app.use(express.json({ limit: '10kb' }))
 
 initFolder()

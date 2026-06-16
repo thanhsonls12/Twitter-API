@@ -61,6 +61,7 @@ tweetsRouter.get(
   isUserLoggedInValidator(accessTokenValidator),
   isUserLoggedInValidator(verifiedUserValidator),
   getTweetChildrenValidator,
+  audienceValidator,
   wrapRequestHandler(getTweetChildrenController)
 )
 

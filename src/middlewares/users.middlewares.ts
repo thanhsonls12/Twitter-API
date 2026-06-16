@@ -10,6 +10,7 @@ import { comparePassword } from '@/utils/crypto.js'
 import { verifyToken } from '@/utils/jwt.js'
 import { validate } from '@/utils/validation.js'
 import { NextFunction, Request, Response } from 'express'
+import { ObjectId } from 'mongodb'
 
 import { checkSchema } from 'express-validator'
 
@@ -149,7 +150,7 @@ export const loginValidator = validate(
                 status: httpStatus.UNAUTHORIZED
               })
             }
-            console.log('email_verify_token', user.email_verify_token)
+
             req.user = user
           }
         }
@@ -443,13 +444,18 @@ export const resetPasswordValidator = validate(
   )
 )
 
-export const verifiedUserValidator = (
+export const verifiedUserValidator = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { verify } = req.decoded_authorization as TokenPayload
-  if (verify !== UserVerifyStatus.Verified) {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const user = await databaseService.users.findOne(
+    { _id: new ObjectId(user_id) },
+    { projection: { verify: 1 } }
+  )
+
+  if (!user || user.verify !== UserVerifyStatus.Verified) {
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.USER_NOT_VERIFIED,
       status: httpStatus.FORBIDDEN

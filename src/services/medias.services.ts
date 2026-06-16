@@ -65,8 +65,7 @@ class Queue {
         })
         await fs.promises.unlink(videoPath)
         await fs.promises.rm(hlsFolder, { recursive: true, force: true })
-        this.items.shift()
-        await fs.promises.unlink(videoPath)
+
         await databaseService.videoStatus.updateOne(
           { name: idName },
           {
@@ -88,6 +87,7 @@ class Queue {
             console.error(`Error updating video status for ${idName}:`, err)
           })
       } finally {
+        await fs.promises.unlink(videoPath).catch(() => {})
         this.items.shift()
         this.encoding = false
         this.processEncode()
