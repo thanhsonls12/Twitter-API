@@ -2,8 +2,15 @@
 
 Backend API cho ứng dụng Twitter Clone, xây dựng bằng Node.js, Express, TypeScript, MongoDB và Socket.IO. Dự án cung cấp các chức năng xác thực, hồ sơ người dùng, tweet, tương tác like/bookmark, Twitter Circle, tìm kiếm, upload media, chuyển mã video HLS và chat realtime.
 
+## Kiến Trúc Hệ Thống
+
+![Sơ đồ kiến trúc Twitter Clone API](docs/assets/twitter-api-architecture.png)
+
+Client giao tiếp với Express API qua REST/JWT và với Socket.IO cho dữ liệu realtime. Request HTTP đi qua lớp xác thực, validation, controller và service trước khi truy cập MongoDB hoặc các dịch vụ lưu trữ, email và OAuth. Video HLS được xử lý bằng FFmpeg trước khi tải lên Supabase Storage.
+
 ## Mục Lục
 
+- [Kiến Trúc Hệ Thống](#kiến-trúc-hệ-thống)
 - [Tính Năng](#tính-năng)
 - [Công Nghệ](#công-nghệ)
 - [Yêu Cầu](#yêu-cầu)
