@@ -160,10 +160,8 @@ npm run build
 Chạy production sau khi build:
 
 ```bash
-node dist/index.js --production
+npm run start
 ```
-
-Lưu ý: script `npm run start` hiện đang được khai báo là `node dist/index.ts --production` trong `package.json`. Sau khi `tsc` build, output thông thường là `dist/index.js`, nên lệnh production khuyến nghị là lệnh trực tiếp ở trên hoặc cập nhật script `start` cho phù hợp.
 
 Server mặc định chạy tại:
 
@@ -440,8 +438,8 @@ dist/              Output sau khi build, đã gitignore
 | Script                 | Lệnh                                   | Mô tả                                                                              |
 | ---------------------- | -------------------------------------- | ---------------------------------------------------------------------------------- |
 | `npm run dev`          | `tsx watch src/index.ts --development` | Chạy development với watch mode.                                                   |
-| `npm run build`        | `tsc`                                  | Compile TypeScript ra `dist`.                                                      |
-| `npm run start`        | `node dist/index.ts --production`      | Script production hiện tại trong `package.json`. Xem lưu ý ở phần chạy production. |
+| `npm run build`        | `tsc && tsc-alias`                     | Compile TypeScript ra `dist` và chuyển alias sang đường dẫn Node.js hỗ trợ.         |
+| `npm run start`        | `node dist/index.js --production`      | Chạy bản production đã build.                                                      |
 | `npm run lint`         | `eslint .`                             | Kiểm tra lint.                                                                     |
 | `npm run format`       | `prettier . --write`                   | Format toàn bộ project.                                                            |
 | `npm run check-format` | `prettier . --check`                   | Kiểm tra format.                                                                   |
@@ -456,3 +454,63 @@ dist/              Output sau khi build, đã gitignore
 - Nếu HLS không hoạt động, kiểm tra `ffmpeg` và `ffprobe` có sẵn trong `PATH` bằng `ffmpeg -version` và `ffprobe -version`.
 - Nếu endpoint protected trả `Forbidden`, kiểm tra user đã xác minh email hay chưa.
 - Nếu OAuth Google lỗi redirect, kiểm tra `GOOGLE_CALLBACK_URL` trùng với URL đã cấu hình trong Google Cloud Console.
+
+## Chạy bằng Docker
+
+Yêu cầu Docker Engine hoặc Docker Desktop có hỗ trợ Docker Compose.
+
+### Chạy API cùng MongoDB
+
+Tạo file cấu hình môi trường và thay các giá trị `change-me-*` bằng thông tin thật:
+
+```bash
+cp .env.example .env
+```
+
+Build và khởi động API cùng MongoDB:
+
+```bash
+docker compose up --build -d
+```
+
+Theo dõi log API:
+
+```bash
+docker compose logs -f api
+```
+
+API và Swagger sau khi khởi động:
+
+```text
+http://localhost:3000
+http://localhost:3000/api-docs
+```
+
+MongoDB trong Compose dùng volume `mongo_data`; file upload dùng volume `uploads`, nên dữ liệu vẫn còn khi container được tạo lại.
+
+Dừng các container nhưng giữ dữ liệu:
+
+```bash
+docker compose down
+```
+
+Dừng và xóa cả MongoDB/upload volume:
+
+```bash
+docker compose down -v
+```
+
+> `docker compose down -v` xóa dữ liệu local trong các Docker volume và không thể khôi phục bằng Compose.
+
+### Chạy riêng image API
+
+Khi dùng MongoDB Atlas hoặc MongoDB nằm ngoài Compose:
+
+```bash
+docker build -t twitter-api .
+docker run --name twitter-api --env-file .env -p 3000:3000 twitter-api
+```
+
+Trong chế độ này, `MONGO_URI` trong `.env` phải truy cập được từ container. Nếu MongoDB chạy trên máy host với Docker Desktop, dùng `mongodb://host.docker.internal:27017` thay vì `mongodb://127.0.0.1:27017`.
+
+Image production chạy bằng user không đặc quyền, chỉ chứa dependency production và đã cài FFmpeg/FFprobe để hỗ trợ xử lý video HLS.
