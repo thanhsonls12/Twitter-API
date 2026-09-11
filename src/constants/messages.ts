@@ -116,6 +116,7 @@ export const TWEETS_MESSAGES = {
   TWEET_ID_REQUIRED: 'Tweet ID is required',
   TWEET_ID_INVALID: 'Tweet ID is invalid',
   TWEET_NOT_FOUND: 'Tweet not found',
+  TWEET_DELETE_FORBIDDEN: 'You are not allowed to delete this tweet',
   TWEET_FETCHED: 'Tweet fetched successfully',
   TWEET_CREATED: 'Tweet created successfully',
   TWEET_DELETED: 'Tweet deleted successfully',

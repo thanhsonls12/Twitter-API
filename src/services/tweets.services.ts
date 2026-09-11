@@ -91,6 +91,12 @@ class TweetService {
         status: httpStatus.NOT_FOUND
       })
     }
+    if (!tweet.user_id.equals(new ObjectId(user_id))) {
+      throw new ErrorWithStatus({
+        message: TWEETS_MESSAGES.TWEET_DELETE_FORBIDDEN,
+        status: httpStatus.FORBIDDEN
+      })
+    }
     const result = await databaseService.tweets.deleteOne({
       _id: new ObjectId(tweet_id),
       user_id: new ObjectId(user_id)

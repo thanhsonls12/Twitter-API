@@ -231,7 +231,7 @@ export const audienceValidator = wrapRequestHandler(
     if (tweet.audience === TweetAudience.Everyone) {
       return next()
     }
-    const { user_id } = req.decoded_authorization as { user_id: string }
+    const user_id = req.decoded_authorization?.user_id
     if (!user_id) {
       throw new ErrorWithStatus({
         message: AUTH_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,

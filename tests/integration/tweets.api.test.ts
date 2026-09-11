@@ -127,4 +127,104 @@ describe('tweet API integration', () => {
     )
     expect(findTweet).not.toHaveBeenCalled()
   })
+
+  it('GET /tweets/:tweet_id allows anonymous access to a public tweet', async () => {
+    const tweetId = new ObjectId()
+    const publicTweet = {
+      _id: tweetId,
+      user_id: new ObjectId(),
+      audience: TweetAudience.Everyone,
+      content: 'Public tweet'
+    }
+    vi.spyOn(databaseService, 'tweets', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue(publicTweet)
+    } as never)
+    vi.spyOn(tweetService, 'getTweet').mockResolvedValue(publicTweet as never)
+
+    const response = await request(createApp()).get(`/tweets/${tweetId}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body.result).toMatchObject({
+      _id: tweetId.toString(),
+      content: 'Public tweet'
+    })
+    expect(tweetService.getTweet).toHaveBeenCalledWith(
+      tweetId.toString(),
+      undefined
+    )
+  })
+
+  it('GET /tweets/:tweet_id allows a Twitter Circle member', async () => {
+    const { userId, token } = await authenticatedUser()
+    const tweetId = new ObjectId()
+    const authorId = new ObjectId()
+    const privateTweet = {
+      _id: tweetId,
+      user_id: authorId,
+      audience: TweetAudience.TwitterCircle,
+      content: 'Circle tweet'
+    }
+    vi.spyOn(databaseService, 'tweets', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue(privateTweet)
+    } as never)
+    vi.spyOn(databaseService, 'users', 'get').mockReturnValue({
+      findOne: vi
+        .fn()
+        .mockResolvedValueOnce({ verify: UserVerifyStatus.Verified })
+        .mockResolvedValueOnce({ twitter_circle: [new ObjectId(userId)] })
+    } as never)
+    vi.spyOn(tweetService, 'getTweet').mockResolvedValue(privateTweet as never)
+
+    const response = await request(createApp())
+      .get(`/tweets/${tweetId}`)
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body.result.content).toBe('Circle tweet')
+  })
+
+  it('GET /tweets/:tweet_id rejects a user outside the Twitter Circle', async () => {
+    const { token } = await authenticatedUser()
+    const tweetId = new ObjectId()
+    vi.spyOn(databaseService, 'tweets', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue({
+        _id: tweetId,
+        user_id: new ObjectId(),
+        audience: TweetAudience.TwitterCircle
+      })
+    } as never)
+    vi.spyOn(databaseService, 'users', 'get').mockReturnValue({
+      findOne: vi
+        .fn()
+        .mockResolvedValueOnce({ verify: UserVerifyStatus.Verified })
+        .mockResolvedValueOnce({ twitter_circle: [] })
+    } as never)
+    const getTweet = vi.spyOn(tweetService, 'getTweet')
+
+    const response = await request(createApp())
+      .get(`/tweets/${tweetId}`)
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(response.status).toBe(403)
+    expect(response.body).toEqual({ message: TWEETS_MESSAGES.IS_NOT_PUBLIC })
+    expect(getTweet).not.toHaveBeenCalled()
+  })
+
+  it('GET /tweets/:tweet_id requires login for a Twitter Circle tweet', async () => {
+    const tweetId = new ObjectId()
+    vi.spyOn(databaseService, 'tweets', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue({
+        _id: tweetId,
+        user_id: new ObjectId(),
+        audience: TweetAudience.TwitterCircle
+      })
+    } as never)
+
+    const response = await request(createApp()).get(`/tweets/${tweetId}`)
+
+    expect(response.status).toBe(401)
+    expect(response.body).toEqual({
+      message: AUTH_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+    })
+  })
 })

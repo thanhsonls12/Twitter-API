@@ -93,4 +93,112 @@ describe('auth API integration', () => {
       message: AUTH_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
     })
   })
+
+  it('POST /users/refresh-token rotates a valid refresh token', async () => {
+    const userId = new ObjectId().toString()
+    const oldRefreshToken = await signToken({
+      payload: {
+        user_id: userId,
+        token_type: TokenType.RefreshToken,
+        verify: UserVerifyStatus.Verified
+      },
+      secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN,
+      options: { expiresIn: '7d' }
+    })
+    vi.spyOn(databaseService, 'refreshTokens', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue({
+        user_id: new ObjectId(userId),
+        token: oldRefreshToken
+      })
+    } as never)
+    const refreshTokens = vi.spyOn(usersService, 'refreshTokens').mockResolvedValue({
+      access_token: 'new-access-token',
+      refresh_token: 'new-refresh-token'
+    })
+
+    const response = await request(createApp())
+      .post('/users/refresh-token')
+      .send({ refresh_token: oldRefreshToken })
+
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual({
+      message: AUTH_MESSAGES.TOKENS_REFRESHED_SUCCESSFULLY,
+      data: {
+        access_token: 'new-access-token',
+        refresh_token: 'new-refresh-token'
+      }
+    })
+    expect(refreshTokens).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: userId,
+        refresh_token: oldRefreshToken
+      })
+    )
+  })
+
+  it('POST /users/logout invalidates a valid refresh token', async () => {
+    const userId = new ObjectId().toString()
+    const [accessToken, refreshToken] = await Promise.all([
+      signToken({
+        payload: {
+          user_id: userId,
+          token_type: TokenType.AccessToken,
+          verify: UserVerifyStatus.Verified
+        },
+        secretKey: envConfig.JWT_SECRET_ACCESS_TOKEN
+      }),
+      signToken({
+        payload: {
+          user_id: userId,
+          token_type: TokenType.RefreshToken,
+          verify: UserVerifyStatus.Verified
+        },
+        secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN,
+        options: { expiresIn: '7d' }
+      })
+    ])
+    vi.spyOn(databaseService, 'refreshTokens', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue({
+        user_id: new ObjectId(userId),
+        token: refreshToken
+      })
+    } as never)
+    const logout = vi
+      .spyOn(usersService, 'logout')
+      .mockResolvedValue({ message: AUTH_MESSAGES.LOGOUT_SUCCESSFUL })
+
+    const response = await request(createApp())
+      .post('/users/logout')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ refresh_token: refreshToken })
+
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual({ message: AUTH_MESSAGES.LOGOUT_SUCCESSFUL })
+    expect(logout).toHaveBeenCalledWith(refreshToken, userId)
+  })
+
+  it('POST /users/refresh-token rejects a token removed by logout', async () => {
+    const userId = new ObjectId().toString()
+    const refreshToken = await signToken({
+      payload: {
+        user_id: userId,
+        token_type: TokenType.RefreshToken,
+        verify: UserVerifyStatus.Verified
+      },
+      secretKey: envConfig.JWT_SECRET_REFRESH_TOKEN,
+      options: { expiresIn: '7d' }
+    })
+    vi.spyOn(databaseService, 'refreshTokens', 'get').mockReturnValue({
+      findOne: vi.fn().mockResolvedValue(null)
+    } as never)
+
+    const response = await request(createApp())
+      .post('/users/refresh-token')
+      .send({ refresh_token: refreshToken })
+
+    expect(response.status).toBe(401)
+    expect(response.body).toEqual({
+      message: AUTH_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXISTS
+    })
+  })
 })
