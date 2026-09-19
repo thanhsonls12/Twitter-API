@@ -124,8 +124,11 @@ export const swaggerDocument = {
   },
   servers: [
     {
-      url: `http://localhost:${envConfig.PORT}`,
-      description: 'Local development server'
+      url: envConfig.BASE_URL,
+      description:
+        envConfig.NODE_ENV === 'production'
+          ? 'Production server'
+          : 'Development server'
     }
   ],
   tags: [

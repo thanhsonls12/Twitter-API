@@ -11,7 +11,8 @@ const users = new Map<string, string>()
 export function initSocket(httpServer: HttpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: envConfig.CLIENT_URL,
+      origin:
+        envConfig.CORS_ORIGINS.length > 0 ? envConfig.CORS_ORIGINS : false,
       credentials: true
     }
   })
@@ -50,4 +51,6 @@ export function initSocket(httpServer: HttpServer) {
       users.delete(user_id)
     })
   })
+
+  return io
 }

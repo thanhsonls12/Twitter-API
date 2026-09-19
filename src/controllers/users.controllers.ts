@@ -271,6 +271,17 @@ export const oauthGoogleController = async (req: Request, res: Response) => {
       status: httpStatus.UNAUTHORIZED
     })
   }
+  if (!envConfig.CLIENT_URL) {
+    return res.json({
+      message: 'Google OAuth successful',
+      data: {
+        user_id: user._id.toString(),
+        access_token: user.access_token,
+        refresh_token: user.refresh_token
+      }
+    })
+  }
+
   const redirectUrl = new URL('/oauth/callback', envConfig.CLIENT_URL)
 
   redirectUrl.searchParams.set('user_id', user._id.toString())

@@ -130,7 +130,9 @@ usersRouter.get(
   '/oauth/google/callback',
   passport.authenticate('google', {
     session: false,
-    failureRedirect: `${envConfig.CLIENT_URL}/login`
+    failureRedirect: envConfig.CLIENT_URL
+      ? `${envConfig.CLIENT_URL}/login`
+      : '/api-docs'
   }),
   wrapRequestHandler(oauthGoogleController)
 )

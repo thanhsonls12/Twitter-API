@@ -11,7 +11,9 @@ const transporter = nodemailer.createTransport({
 })
 
 export async function sendVerifyEmail(to: string, token: string) {
-  const verifyLink = `${envConfig.CLIENT_URL}/verify-email?token=${token}`
+  const verifyLink = envConfig.CLIENT_URL
+    ? `${envConfig.CLIENT_URL}/verify-email?token=${token}`
+    : null
 
   await transporter.sendMail({
     from: `"Twitter Clone" <${envConfig.SMTP_USER}>`,
@@ -19,15 +21,20 @@ export async function sendVerifyEmail(to: string, token: string) {
     subject: 'Verify your email for Twitter Clone',
     html: `
       <h2>Verify your email address</h2>
-      <p>Click the link below to verify your email:</p>
-      <a href="${verifyLink}">${verifyLink}</a>
+      ${
+        verifyLink
+          ? `<p>Click the link below to verify your email:</p><a href="${verifyLink}">${verifyLink}</a>`
+          : `<p>Use this verification token with <code>POST /users/verify-email</code>:</p><code>${token}</code>`
+      }
       <p>This link expires in 15 minutes.</p>
     `
   })
 }
 
 export async function sendForgotPasswordEmail(to: string, token: string) {
-  const resetLink = `${envConfig.CLIENT_URL}/reset-password?token=${token}`
+  const resetLink = envConfig.CLIENT_URL
+    ? `${envConfig.CLIENT_URL}/reset-password?token=${token}`
+    : null
 
   await transporter.sendMail({
     from: `"Twitter Clone" <${envConfig.SMTP_USER}>`,
@@ -35,8 +42,11 @@ export async function sendForgotPasswordEmail(to: string, token: string) {
     subject: 'Reset your password for Twitter Clone',
     html: `
       <h2>Reset your password</h2>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetLink}">${resetLink}</a>
+      ${
+        resetLink
+          ? `<p>Click the link below to reset your password:</p><a href="${resetLink}">${resetLink}</a>`
+          : `<p>Use this reset token with <code>POST /users/reset-password</code>:</p><code>${token}</code>`
+      }
       <p>This link expires in 15 minutes.</p>
     `
   })
