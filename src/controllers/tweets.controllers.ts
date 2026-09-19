@@ -14,7 +14,7 @@ export const createTweetController = async (
   const result = await tweetService.createTweet(req.body, user_id)
   return res
     .status(httpStatus.CREATED)
-    .json({ message: TWEETS_MESSAGES.TWEET_CREATED, result })
+    .json({ message: TWEETS_MESSAGES.TWEET_CREATED, data: { tweet: result } })
 }
 
 export const getTweetController = async (req: Request, res: Response) => {

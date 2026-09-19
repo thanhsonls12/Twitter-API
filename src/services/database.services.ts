@@ -24,14 +24,43 @@ class DatabaseService {
 
   async connect() {
     await this.client.connect()
-    await this.db.command({ ping: 1 })
+    await this.ping()
 
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
     )
   }
 
+  async ping() {
+    await this.db.command({ ping: 1 })
+  }
+
   async createIndexes() {
+    // Check if collections exist, create them if not
+    const collections = await this.db.listCollections().toArray()
+    const collectionNames = collections.map(col => col.name)
+
+    const requiredCollections = [
+      envConfig.USERS_COLLECTION,
+      envConfig.REFRESH_TOKENS_COLLECTION,
+      envConfig.FOLLOWS_COLLECTION,
+      envConfig.VIDEO_STATUS_COLLECTION,
+      envConfig.TWEETS_COLLECTION,
+      envConfig.HASHTAGS_COLLECTION,
+      envConfig.BOOKMARKS_COLLECTION,
+      envConfig.LIKES_COLLECTION,
+      envConfig.CONVERSATIONS_COLLECTION,
+      envConfig.MESSAGES_COLLECTION
+    ]
+
+    // Create missing collections
+    for (const collectionName of requiredCollections) {
+      if (!collectionNames.includes(collectionName)) {
+        await this.db.createCollection(collectionName)
+        console.log(`Created collection: ${collectionName}`)
+      }
+    }
+
     const existsUsers = await this.users.indexExists(['email_1', 'username_1'])
     const existsRefreshTokens = await this.refreshTokens.indexExists([
       'token_1',
