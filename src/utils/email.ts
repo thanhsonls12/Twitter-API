@@ -4,6 +4,9 @@ const transporter = nodemailer.createTransport({
   host: envConfig.SMTP_HOST,
   port: envConfig.SMTP_PORT,
   secure: false,
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000,
   auth: {
     user: envConfig.SMTP_USER,
     pass: envConfig.SMTP_PASSWORD

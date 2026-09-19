@@ -150,12 +150,20 @@ class UsersService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
-    await sendVerifyEmail(payload.email, email_verify_token)
+    let email_sent = true
+    try {
+      await sendVerifyEmail(payload.email, email_verify_token)
+    } catch (error) {
+      email_sent = false
+      console.error('Failed to send verification email after registration:', error)
+    }
+
     return {
       ...result,
       user_id,
       access_token,
-      refresh_token
+      refresh_token,
+      email_sent
     }
   }
   async checkEmailExists(email: string) {
