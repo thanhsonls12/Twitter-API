@@ -17,7 +17,6 @@ const requiredEnvVariables = [
   'FORGOT_PASSWORD_TOKEN_EXPIRES_IN',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
-  'GOOGLE_CALLBACK_URL',
   'VIDEO_STATUS_COLLECTION',
   'TWEETS_COLLECTION',
   'HASHTAGS_COLLECTION',
@@ -57,6 +56,12 @@ if (!Number.isInteger(port) || port <= 0 || port > 65535) {
 }
 
 const clientUrl = process.env.CLIENT_URL?.trim() || undefined
+const renderExternalHostname = process.env.RENDER_EXTERNAL_HOSTNAME?.trim()
+const baseUrl =
+  process.env.BASE_URL?.trim() ||
+  (renderExternalHostname
+    ? `https://${renderExternalHostname}`
+    : `http://localhost:${port}`)
 const corsOrigins = Array.from(
   new Set(
     [
@@ -92,7 +97,9 @@ export const envConfig = {
     .FORGOT_PASSWORD_TOKEN_EXPIRES_IN as string,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
-  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
+  GOOGLE_CALLBACK_URL:
+    process.env.GOOGLE_CALLBACK_URL?.trim() ||
+    `${baseUrl}/users/oauth/google/callback`,
   CLIENT_URL: clientUrl,
   CORS_ORIGINS: corsOrigins,
   VIDEO_STATUS_COLLECTION: process.env.VIDEO_STATUS_COLLECTION as string,
@@ -100,8 +107,7 @@ export const envConfig = {
   HASHTAGS_COLLECTION: process.env.HASHTAGS_COLLECTION as string,
   BOOKMARKS_COLLECTION: process.env.BOOKMARKS_COLLECTION as string,
   LIKES_COLLECTION: process.env.LIKES_COLLECTION as string,
-  BASE_URL:
-    process.env.BASE_URL || `http://localhost:${process.env.PORT || '3000'}`,
+  BASE_URL: baseUrl,
   SMTP_HOST: process.env.SMTP_HOST as string,
   SMTP_PORT: smtpPort,
   SMTP_USER: process.env.SMTP_USER as string,
