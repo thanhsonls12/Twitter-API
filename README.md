@@ -56,7 +56,7 @@ Client giao tiếp với Express API qua REST/JWT và với Socket.IO cho dữ l
 - Validation: express-validator
 - Upload: formidable, sharp, file-type
 - Storage: Supabase Storage
-- Email: Nodemailer SMTP
+- Email: Resend
 - Video processing: FFmpeg, FFprobe, HLS
 - API docs: swagger-ui-express
 - Quality: ESLint, Prettier
@@ -122,10 +122,8 @@ GOOGLE_CLIENT_ID=replace_with_google_client_id
 GOOGLE_CLIENT_SECRET=replace_with_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/users/oauth/google/callback
 
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=no-reply@example.com
-SMTP_PASSWORD=replace_with_smtp_password
+RESEND_API_KEY=re_replace_with_resend_api_key
+EMAIL_FROM=Twitter API <twitter@sonkma.io.vn>
 
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=replace_with_service_role_key
@@ -146,7 +144,8 @@ SUPABASE_SERVICE_ROLE_KEY=replace_with_service_role_key
 | `GOOGLE_CLIENT_ID`          | Có       | Client ID Google OAuth.                                          |
 | `GOOGLE_CLIENT_SECRET`      | Có       | Client secret Google OAuth.                                      |
 | `GOOGLE_CALLBACK_URL`       | Có       | Callback URL đã khai báo trong Google Console.                   |
-| `SMTP_*`                    | Có       | Cấu hình gửi email bằng Nodemailer.                              |
+| `RESEND_API_KEY`            | Có       | API key dùng để gửi transactional email qua Resend.              |
+| `EMAIL_FROM`                | Có       | Sender đã được xác thực trên Resend.                             |
 | `SUPABASE_URL`              | Có       | URL Supabase project.                                            |
 | `SUPABASE_SERVICE_ROLE_KEY` | Có       | Service role key cho upload storage. Giữ bí mật.                 |
 
@@ -442,14 +441,14 @@ dist/              Output sau khi build, đã gitignore
 
 ## Scripts
 
-| Script                 | Lệnh                                   | Mô tả                                                                              |
-| ---------------------- | -------------------------------------- | ---------------------------------------------------------------------------------- |
-| `npm run dev`          | `tsx watch src/index.ts --development` | Chạy development với watch mode.                                                   |
-| `npm run build`        | `tsc && tsc-alias`                     | Compile TypeScript ra `dist` và chuyển alias sang đường dẫn Node.js hỗ trợ.         |
-| `npm run start`        | `node dist/index.js --production`      | Chạy bản production đã build.                                                      |
-| `npm run lint`         | `eslint .`                             | Kiểm tra lint.                                                                     |
-| `npm run format`       | `prettier . --write`                   | Format toàn bộ project.                                                            |
-| `npm run check-format` | `prettier . --check`                   | Kiểm tra format.                                                                   |
+| Script                 | Lệnh                                   | Mô tả                                                                       |
+| ---------------------- | -------------------------------------- | --------------------------------------------------------------------------- |
+| `npm run dev`          | `tsx watch src/index.ts --development` | Chạy development với watch mode.                                            |
+| `npm run build`        | `tsc && tsc-alias`                     | Compile TypeScript ra `dist` và chuyển alias sang đường dẫn Node.js hỗ trợ. |
+| `npm run start`        | `node dist/index.js --production`      | Chạy bản production đã build.                                               |
+| `npm run lint`         | `eslint .`                             | Kiểm tra lint.                                                              |
+| `npm run format`       | `prettier . --write`                   | Format toàn bộ project.                                                     |
+| `npm run check-format` | `prettier . --check`                   | Kiểm tra format.                                                            |
 
 ## Ghi Chú Vận Hành
 

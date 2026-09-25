@@ -74,13 +74,9 @@ services:
       - key: GOOGLE_CALLBACK_URL
         value: https://twitter-api.sonkma.id.vn/users/oauth/google/callback
 
-      - key: SMTP_HOST
+      - key: RESEND_API_KEY
         sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
+      - key: EMAIL_FROM
         sync: false
 
       - key: SUPABASE_URL

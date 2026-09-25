@@ -1,25 +1,35 @@
 import { envConfig } from '@/config/env.js'
-import nodemailer from 'nodemailer'
-const transporter = nodemailer.createTransport({
-  host: envConfig.SMTP_HOST,
-  port: envConfig.SMTP_PORT,
-  secure: false,
-  connectionTimeout: 5000,
-  greetingTimeout: 5000,
-  socketTimeout: 5000,
-  auth: {
-    user: envConfig.SMTP_USER,
-    pass: envConfig.SMTP_PASSWORD
+import { Resend } from 'resend'
+
+const resend = new Resend(envConfig.RESEND_API_KEY)
+
+async function sendEmail({
+  to,
+  subject,
+  html
+}: {
+  to: string
+  subject: string
+  html: string
+}) {
+  const { error } = await resend.emails.send({
+    from: envConfig.EMAIL_FROM,
+    to,
+    subject,
+    html
+  })
+
+  if (error) {
+    throw new Error(`Resend email delivery failed: ${error.message}`)
   }
-})
+}
 
 export async function sendVerifyEmail(to: string, token: string) {
   const verifyLink = envConfig.CLIENT_URL
     ? `${envConfig.CLIENT_URL}/verify-email?token=${token}`
     : null
 
-  await transporter.sendMail({
-    from: `"Twitter Clone" <${envConfig.SMTP_USER}>`,
+  await sendEmail({
     to,
     subject: 'Verify your email for Twitter Clone',
     html: `
@@ -39,8 +49,7 @@ export async function sendForgotPasswordEmail(to: string, token: string) {
     ? `${envConfig.CLIENT_URL}/reset-password?token=${token}`
     : null
 
-  await transporter.sendMail({
-    from: `"Twitter Clone" <${envConfig.SMTP_USER}>`,
+  await sendEmail({
     to,
     subject: 'Reset your password for Twitter Clone',
     html: `

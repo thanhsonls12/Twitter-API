@@ -22,10 +22,8 @@ const requiredEnvVariables = [
   'HASHTAGS_COLLECTION',
   'BOOKMARKS_COLLECTION',
   'LIKES_COLLECTION',
-  'SMTP_HOST',
-  'SMTP_PORT',
-  'SMTP_USER',
-  'SMTP_PASSWORD',
+  'RESEND_API_KEY',
+  'EMAIL_FROM',
   'SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
   'CONVERSATIONS_COLLECTION',
@@ -45,14 +43,11 @@ if (Number.isNaN(expireAfterSeconds)) {
   throw new Error('Environment variable EXPIRE_AFTER_SECONDS must be a number.')
 }
 
-const smtpPort = Number(process.env.SMTP_PORT)
-if (!Number.isInteger(smtpPort) || smtpPort <= 0) {
-  throw new Error('Environment variable SMTP_PORT must be a positive integer.')
-}
-
 const port = Number(process.env.PORT || '3000')
 if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-  throw new Error('Environment variable PORT must be an integer between 1 and 65535.')
+  throw new Error(
+    'Environment variable PORT must be an integer between 1 and 65535.'
+  )
 }
 
 const clientUrl = process.env.CLIENT_URL?.trim() || undefined
@@ -63,15 +58,13 @@ const baseUrl =
     ? `https://${renderExternalHostname}`
     : `http://localhost:${port}`)
 const corsOrigins = Array.from(
-  new Set(
-    [
-      ...(process.env.CORS_ORIGINS ?? '')
-        .split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean),
-      ...(clientUrl ? [clientUrl] : [])
-    ]
-  )
+  new Set([
+    ...(process.env.CORS_ORIGINS ?? '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+    ...(clientUrl ? [clientUrl] : [])
+  ])
 )
 
 export const envConfig = {
@@ -108,10 +101,8 @@ export const envConfig = {
   BOOKMARKS_COLLECTION: process.env.BOOKMARKS_COLLECTION as string,
   LIKES_COLLECTION: process.env.LIKES_COLLECTION as string,
   BASE_URL: baseUrl,
-  SMTP_HOST: process.env.SMTP_HOST as string,
-  SMTP_PORT: smtpPort,
-  SMTP_USER: process.env.SMTP_USER as string,
-  SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
+  RESEND_API_KEY: process.env.RESEND_API_KEY as string,
+  EMAIL_FROM: process.env.EMAIL_FROM as string,
   SUPABASE_URL: process.env.SUPABASE_URL as string,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY as string,
   CONVERSATIONS_COLLECTION: process.env.CONVERSATIONS_COLLECTION as string,
